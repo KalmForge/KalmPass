@@ -317,8 +317,8 @@ button:disabled {
 
 .shell {
   height: 100dvh;
-  display: grid;
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
 }
 .topbar {
   display: flex;
@@ -363,31 +363,16 @@ button:disabled {
 .icon-btn:hover {
   border-color: var(--text-faint);
 }
-.i-menu,
-.i-gear,
-.i-lock {
-  width: 16px;
-  height: 16px;
+.icon-btn .i {
   display: block;
-  background: currentColor;
+  color: var(--text-dim);
 }
-.i-menu {
-  mask: linear-gradient(#000 0 0) 0 2px/100% 2px no-repeat,
-    linear-gradient(#000 0 0) 0 7px/100% 2px no-repeat,
-    linear-gradient(#000 0 0) 0 12px/100% 2px no-repeat;
-}
-.i-gear {
-  mask: radial-gradient(circle 4px at 50% 50%, transparent 98%, #000 100%) 50% 50%/16px 16px
-      no-repeat,
-    radial-gradient(circle 7.5px at 50% 50%, #000 98%, transparent 100%) 50% 50%/16px 16px no-repeat;
-}
-.i-lock {
-  mask: linear-gradient(#000 0 0) 1px 7px/14px 9px no-repeat,
-    radial-gradient(circle 4px at 50% 100%, transparent 60%, #000 62% 100%) 50% 1px/12px 6px
-      no-repeat;
+.icon-btn:hover .i {
+  color: var(--text);
 }
 
 .body {
+  flex: 1;
   display: grid;
   grid-template-columns: 210px minmax(280px, 380px) 1fr;
   min-height: 0;

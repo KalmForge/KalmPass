@@ -172,10 +172,17 @@ Non-secret settings (`APP_URL`, `MAIL_FROM`, `ALLOW_SIGNUP`) live in
       needs the Workers Paid plan; on the free plan the dashboard offers no way
       to onboard a domain and the API answers Unauthorized, which reads as a
       permissions problem but is a billing one.
-- [ ] **Stripe.** Create a Pro price, then set the three `STRIPE_*` secrets and
-      point a webhook at `https://kalmpass.net/api/billing/webhook` for
+- [ ] **Stripe.** Create a Pro price, set the three `STRIPE_*` secrets with
+      `npm run stripe:secrets`, and point a webhook at
+      `https://kalmpass.net/api/billing/webhook` for
       `checkout.session.completed`, `customer.subscription.*` and
       `invoice.payment_failed`.
+
+      Test and live are separate worlds. The product, the price, the keys and
+      the webhook all exist twice over and none of it carries across. Mixing a
+      live key with a test webhook secret fails silently: the customer pays and
+      the plan never changes. The admin page shows which mode the keys are in,
+      so check it after any switch.
 - [x] **Open signups.** Done. Re-close them at any time by setting SIGNUP_TOKEN
       again, or ALLOW_SIGNUP to "false" in wrangler.jsonc.
 - [ ] **Legal.** `public/terms/` and `public/privacy/` are drafts with bracketed

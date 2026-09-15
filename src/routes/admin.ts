@@ -129,6 +129,25 @@ export async function overview(env: Env, session: Session): Promise<Response> {
   const counts = firstRow<Record<string, number>>(totals);
   const itemTotals = firstRow<Record<string, number>>(items);
   const price = Number(env.PRO_PRICE ?? "0");
+
+  /**
+   * Which Stripe world the keys belong to, read off the prefixes.
+   *
+   * A live secret key paired with a test webhook secret fails silently: the
+   * customer pays, the webhook signature never verifies, and the plan never
+   * changes. Surfacing the mode makes that mistake visible instead.
+   */
+  const keyMode = env.STRIPE_SECRET_KEY?.startsWith("sk_live_")
+    ? "live"
+    : env.STRIPE_SECRET_KEY?.startsWith("sk_test_") || env.STRIPE_SECRET_KEY?.startsWith("rk_test_")
+      ? "test"
+      : null;
+  const hasWebhook = Boolean(env.STRIPE_WEBHOOK_SECRET);
+  const stripe = !env.STRIPE_SECRET_KEY
+    ? "unconfigured"
+    : !hasWebhook
+      ? "no webhook secret"
+      : (keyMode ?? "unrecognised key");
   const interval = env.PRO_INTERVAL === "month" ? "month" : "year";
   // Normalised to a month, so an annual plan does not read twelve times high.
   const monthlyPrice = interval === "year" ? price / 12 : price;
@@ -150,6 +169,7 @@ export async function overview(env: Env, session: Session): Promise<Response> {
     currency: env.PRO_CURRENCY ?? "GBP",
     price,
     interval,
+    stripe,
     totals: {
       accounts: counts.accounts ?? 0,
       verified: counts.verified ?? 0,

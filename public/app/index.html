@@ -220,7 +220,13 @@
 
       <header class="topbar">
         <button id="nav-toggle" class="icon-btn only-narrow" type="button" aria-label="Menu">
-          <span class="i-menu" aria-hidden="true"></span>
+          <svg class="i" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="4" y1="7" x2="20" y2="7" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="17" x2="20" y2="17" />
+            </g>
+          </svg>
         </button>
 
         <a class="brand" href="/">
@@ -238,10 +244,31 @@
           <button id="btn-generate" class="ghost" type="button">Generate</button>
           <button id="btn-new" class="primary" type="button">New item</button>
           <button id="btn-settings" class="icon-btn" type="button" aria-label="Settings">
-            <span class="i-gear" aria-hidden="true"></span>
+            <svg class="i" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+            <defs>
+              <mask id="cog-hole">
+                <rect width="24" height="24" fill="#fff" />
+                <circle cx="12" cy="12" r="2.7" fill="#000" />
+              </mask>
+            </defs>
+            <g fill="currentColor" mask="url(#cog-hole)">
+              <circle cx="12" cy="12" r="6.6" />
+        <rect x="10.9" y="1.4" width="2.2" height="4.6" rx="0.9" transform="rotate(0 12 12)" />
+        <rect x="10.9" y="1.4" width="2.2" height="4.6" rx="0.9" transform="rotate(45 12 12)" />
+        <rect x="10.9" y="1.4" width="2.2" height="4.6" rx="0.9" transform="rotate(90 12 12)" />
+        <rect x="10.9" y="1.4" width="2.2" height="4.6" rx="0.9" transform="rotate(135 12 12)" />
+        <rect x="10.9" y="1.4" width="2.2" height="4.6" rx="0.9" transform="rotate(180 12 12)" />
+        <rect x="10.9" y="1.4" width="2.2" height="4.6" rx="0.9" transform="rotate(225 12 12)" />
+        <rect x="10.9" y="1.4" width="2.2" height="4.6" rx="0.9" transform="rotate(270 12 12)" />
+        <rect x="10.9" y="1.4" width="2.2" height="4.6" rx="0.9" transform="rotate(315 12 12)" />
+            </g>
+          </svg>
           </button>
           <button id="btn-lock" class="icon-btn" type="button" aria-label="Lock vault">
-            <span class="i-lock" aria-hidden="true"></span>
+            <svg class="i" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+            <path d="M7.6 10.4V7.6a4.4 4.4 0 0 1 8.8 0v2.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <rect x="4.6" y="10.4" width="14.8" height="10.2" rx="2.4" fill="currentColor" />
+          </svg>
           </button>
         </div>
       </header>

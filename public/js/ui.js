@@ -92,7 +92,10 @@ export function openModal({ title, render, wide }) {
       }),
     ]),
     el("div", { class: "modal-body" }, body),
-    footer ? el("div", { class: "modal-foot" }, footer) : null,
+    // Filtered rather than passed conditionally: Element.append does not skip a
+    // null the way our own el() does, it stringifies it, which is how a literal
+    // "null" ended up at the foot of every modal that has no buttons.
+    ...(footer ? [el("div", { class: "modal-foot" }, footer)] : []),
   );
 
   node.showModal();

@@ -83,6 +83,12 @@ function render(data) {
       ["Accounts", t.accounts, `${t.verified} confirmed`],
       ["Paying", t.pro, t.accounts ? `${percent(t.pro, t.accounts)} of accounts` : ""],
       ["Price", money.format(data.price), `per ${data.interval}`],
+      [
+        "Stripe",
+        data.stripe,
+        data.stripe === "live" ? "taking real payments" : "not taking real money",
+        data.stripe === "live" ? null : "attention",
+      ],
       ["Monthly revenue", money.format(t.mrr), `${money.format(data.arr)} a year`],
       ["New", t.newInWindow, `in ${data.windowDays} days`],
       ["Active", t.activeInWindow, `in ${data.windowDays} days`],
