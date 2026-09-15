@@ -236,6 +236,25 @@ async function onCheckoutCompleted(env: Env, object: Record<string, any>): Promi
   await audit.record(env, userId, "plan_changed", "Upgraded to Pro");
 }
 
+/**
+ * Where the renewal date lives depends on the API version the webhook was
+ * created with. Stripe moved it off the subscription and onto each subscription
+ * item in the 2025-03-31 release, so read both rather than tying this Worker to
+ * whichever version happened to be selected in the dashboard.
+ */
+function periodEndOf(subscription: Record<string, any>): number | null {
+  const top = subscription?.current_period_end;
+  if (typeof top === "number") return top * 1000;
+
+  const items: any[] = subscription?.items?.data ?? [];
+  const ends = items
+    .map((item) => item?.current_period_end)
+    .filter((value): value is number => typeof value === "number");
+
+  // A subscription with several items renews when the earliest one does.
+  return ends.length > 0 ? Math.min(...ends) * 1000 : null;
+}
+
 async function onSubscriptionChanged(
   env: Env,
   object: Record<string, any>,
@@ -251,8 +270,7 @@ async function onSubscriptionChanged(
     ? "free"
     : "pro";
 
-  const periodEnd =
-    typeof object.current_period_end === "number" ? object.current_period_end * 1000 : null;
+  const periodEnd = periodEndOf(object);
 
   await env.DB.prepare(
     `UPDATE users SET plan = ?, plan_status = ?, plan_period_end = ?,
