@@ -54,6 +54,7 @@ export const api = {
   resendVerification: () => request("POST", "/account/resend-verification"),
 
   rekey: (body) => request("POST", "/account/rekey", body),
+  changeEmail: (body) => request("POST", "/account/email", body),
   recover: (body) => request("POST", "/account/recover", body),
   recoverComplete: (body) => request("POST", "/account/recover/complete", body),
   rotateRecoveryKey: (body) => request("POST", "/account/recovery-key/rotate", body),

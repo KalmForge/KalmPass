@@ -19,6 +19,7 @@ export type AuditKind =
   | "recovery_key_replaced"
   | "account_reset"
   | "email_verified"
+  | "email_changed"
   | "totp_enabled"
   | "totp_disabled"
   | "sessions_revoked"

@@ -16,6 +16,7 @@ import {
   openModal,
   toast,
 } from "./ui.js";
+import { isEmail } from "./validate.js";
 import { render, updateMeter, view } from "./vault-view.js";
 
 /**
@@ -124,6 +125,22 @@ const itemLink = (item) =>
 
 const PANELS = {
   security: ({ refresh }) => [
+    section(
+      "Email address",
+      [
+        el("p", { class: "faint", style: "margin:0" }, [
+          vault.email + (vault.emailVerified ? "" : " (not yet confirmed)"),
+        ]),
+        el("button", {
+          class: "ghost",
+          type: "button",
+          text: "Change email address",
+          onClick: () => changeEmailDialog(refresh),
+        }),
+      ],
+      "Your address is part of the encryption, not just a label, so changing it rebuilds your keys and issues a new Recovery Key. Your items are not re-encrypted and nothing is lost.",
+    ),
+
     section(
       "Master password",
       [
@@ -367,6 +384,65 @@ function changeMasterPassword() {
           el("label", { class: "field" }, [el("span", { text: "Current master password" }), current]),
           el("label", { class: "field" }, [el("span", { text: "New master password" }), next, meter]),
           el("label", { class: "field" }, [el("span", { text: "Confirm new password" }), confirm]),
+          error,
+        ],
+        footer: [
+          el("button", { class: "ghost", type: "button", text: "Cancel", onClick: () => close(false) }),
+          save,
+        ],
+      };
+    },
+  });
+}
+
+function changeEmailDialog(refresh) {
+  return openModal({
+    title: "Change email address",
+    render: (close) => {
+      const address = el("input", { type: "email", autocomplete: "email", spellcheck: false });
+      const password = el("input", { type: "password", autocomplete: "current-password" });
+      const error = el("p", { class: "error", hidden: true });
+
+      const save = el("button", { class: "primary", type: "button", text: "Change it" });
+      save.addEventListener(
+        "click",
+        guard(async () => {
+          error.hidden = true;
+          if (!isEmail(address.value)) {
+            error.textContent = "Enter a valid email address.";
+            error.hidden = false;
+            return;
+          }
+
+          const done = busy(save, "Changing...");
+          try {
+            const recoveryKey = await store.changeEmail(password.value, address.value);
+            close(true);
+            showRecoveryKey(recoveryKey);
+            toast("Email changed. Confirm the new address when the email arrives.");
+            refresh();
+          } catch (err) {
+            error.textContent = err.message;
+            error.hidden = false;
+            done();
+          }
+        }),
+      );
+
+      return {
+        body: [
+          el("div", { class: "warn" }, [
+            el("strong", { text: "Two things will change with it." }),
+            "You will be given a new Recovery Key, because your current one is tied to your old address and will stop working. Your other devices will be signed out, since they hold keys derived from the old address.",
+          ]),
+          el("p", { class: "faint", style: "margin:0" }, [`Currently ${vault.email}.`]),
+          el("label", { class: "field" }, [el("span", { text: "New email address" }), address]),
+          el("label", { class: "field" }, [el("span", { text: "Master password" }), password]),
+          el("p", {
+            class: "faint",
+            style: "margin:0",
+            text: "Your master password stays the same. You will sign in with it and the new address.",
+          }),
           error,
         ],
         footer: [
@@ -815,6 +891,17 @@ function devicesPanel(refresh) {
         el("button", {
           class: "ghost",
           type: "button",
+          text: "Sign out on this device",
+          onClick: guard(async () => {
+            // Locking only drops the keys from memory. Signing out also ends the
+            // server session, which is what someone on a shared machine means.
+            await store.signOut();
+            location.href = "/app/";
+          }),
+        }),
+        el("button", {
+          class: "ghost",
+          type: "button",
           text: "Sign out every other device",
           onClick: guard(async () => {
             const { revoked } = await api.revokeSessions();
@@ -843,6 +930,7 @@ const ACTIVITY_LABELS = {
   recovery_key_replaced: "New Recovery Key issued",
   account_reset: "Account reset",
   email_verified: "Email confirmed",
+  email_changed: "Email address changed",
   totp_enabled: "Two-factor turned on",
   totp_disabled: "Two-factor turned off",
   sessions_revoked: "Other devices signed out",

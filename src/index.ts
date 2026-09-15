@@ -87,6 +87,9 @@ async function route(
   if (path === "/api/account/rekey" && method === "POST") {
     return account.rekey(env, request, session, ctx);
   }
+  if (path === "/api/account/email" && method === "POST") {
+    return account.changeEmail(env, request, session, ctx);
+  }
   if (path === "/api/account/recovery-key/rotate" && method === "POST") {
     return account.rotateRecoveryKey(env, request, session);
   }

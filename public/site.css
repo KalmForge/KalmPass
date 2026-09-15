@@ -89,17 +89,20 @@ a {
   gap: 14px;
   padding: 16px 0;
 }
+/* The wordmark is set in the same monospace as the Recovery Key, the key
+   chips and the code samples. That is the texture of the product, and it sets
+   the name apart from the Georgia used for headings. */
 .wordmark {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   margin-right: auto;
   color: inherit;
   text-decoration: none;
-  font-family: var(--serif);
-  font-size: 20px;
+  font-family: var(--mono);
+  font-size: 17px;
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.035em;
 }
 .wordmark img {
   border-radius: 7px;

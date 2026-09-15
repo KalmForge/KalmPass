@@ -8,6 +8,7 @@ import { $, el, focus, show } from "./dom.js";
 import { estimateStrength, generatePassphrase } from "./generator.js";
 import { openSettings, prefs } from "./settings.js";
 import * as store from "./store.js";
+import { isEmail } from "./validate.js";
 import { vault } from "./store.js";
 import { copy, guard, toast } from "./ui.js";
 import { openEditor, openGenerator, render, updateMeter, view } from "./vault-view.js";
@@ -206,7 +207,7 @@ $("#view-signup").addEventListener("submit", async (event) => {
   const submit = $("#signup-submit");
   error.hidden = true;
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(error, "Enter a valid email address.");
+  if (!isEmail(email)) return fail(error, "Enter a valid email address.");
   if (password !== $("#signup-confirm").value) return fail(error, "The passwords do not match.");
   if (password.length < 12) return fail(error, "Use at least 12 characters.");
   if (estimateStrength(password).score < 2) {
@@ -376,7 +377,7 @@ $("#view-reset-set").addEventListener("submit", async (event) => {
   const submit = $("#reset-set-submit");
   error.hidden = true;
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(error, "Enter your email address.");
+  if (!isEmail(email)) return fail(error, "Enter your email address.");
   if (password !== $("#reset-set-confirm").value) return fail(error, "The passwords do not match.");
   if (password.length < 12) return fail(error, "Use at least 12 characters.");
 

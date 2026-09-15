@@ -433,6 +433,46 @@ export async function changeMasterPassword(currentPassword, nextPassword) {
   emit();
 }
 
+/**
+ * Change the address on the account.
+ *
+ * The email is the KDF salt, so everything derived from the master password has
+ * to be rebuilt against the new address. The vault key itself is unchanged, so
+ * items are not re-encrypted. A new Recovery Key is issued and returned, because
+ * the old one was salted with the old address and would no longer work.
+ */
+export async function changeEmail(currentPassword, newEmail) {
+  const current = await deriveAccountKeys(currentPassword, vault.email, vault.kdfIterations);
+  const address = normalizeEmail(newEmail);
+  const iterations = DEFAULT_KDF_ITERATIONS;
+  const recoveryKey = generateRecoveryKey();
+
+  const [next, recovery] = await Promise.all([
+    deriveAccountKeys(currentPassword, address, iterations),
+    deriveRecoveryKeys(recoveryKey, address),
+  ]);
+
+  await api.changeEmail({
+    currentAuthKey: current.authKey,
+    email: address,
+    authKey: next.authKey,
+    kdfIterations: iterations,
+    protectedKey: await wrapVaultKey(next.encKey, keys.vault),
+    recoveryWrap: await wrapVaultKey(recovery.encKey, keys.vault),
+    recoveryAuthKey: recovery.authKey,
+  });
+
+  keys.enc = next.encKey;
+  Object.assign(vault, {
+    email: address,
+    kdfIterations: iterations,
+    emailVerified: false,
+    recoveryCreatedAt: Date.now(),
+  });
+  emit();
+  return recoveryKey;
+}
+
 export async function authKeyFor(masterPassword) {
   const { authKey } = await deriveAccountKeys(masterPassword, vault.email, vault.kdfIterations);
   return authKey;

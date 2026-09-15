@@ -158,8 +158,11 @@ h3 {
   text-align: center;
 }
 .auth-head h1 {
-  font-size: 23px;
-  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  margin-top: 6px;
 }
 .auth-head p {
   margin: 0;
@@ -328,9 +331,11 @@ button:disabled {
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-weight: 640;
-  letter-spacing: -0.01em;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
 }
 .search {
   flex: 1;

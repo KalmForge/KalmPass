@@ -425,6 +425,82 @@ export async function rekey(
   return json({ ok: true });
 }
 
+/**
+ * POST /api/account/email. Change the address on the account.
+ *
+ * This is more than a profile edit. The email is the salt for the master key
+ * derivation, so a new address means a new master key: the browser re-derives
+ * everything, re-wraps the vault key, and sends a new verifier. Items are
+ * untouched, because the vault key itself does not change.
+ *
+ * The Recovery Key is salted with the address too, so the old Emergency Kit
+ * would no longer open anything. A fresh one is issued in the same operation
+ * rather than leaving the account with a kit that silently does not work.
+ */
+export async function changeEmail(
+  env: Env,
+  request: Request,
+  session: Session,
+  ctx: ExecutionContext,
+): Promise<Response> {
+  const user = await loadUser(env, session.userId);
+  const body = await readJson(request);
+  await assertMasterPassword(env, user, body);
+
+  const nextEmail = requireEmail(body);
+  const nextIndex = await emailIndex(env, nextEmail);
+
+  if (nextIndex === user.email_index) {
+    throw badRequest("That is already the address on this account.");
+  }
+  const taken = await env.DB.prepare(`SELECT id FROM users WHERE email_index = ?`)
+    .bind(nextIndex)
+    .first<{ id: string }>();
+  if (taken) throw conflict("There is already an account using that address.");
+
+  const previousEmail = await open(env, user.email_enc, `user.email:${user.id}`);
+  const salt = randomBytes(16);
+  const recoverySalt = randomBytes(16);
+  const now = Date.now();
+
+  await env.DB.prepare(
+    `UPDATE users SET email_index = ?, email_enc = ?, email_verified = 0,
+                      auth_hash = ?, server_salt = ?, kdf_iterations = ?, protected_key = ?,
+                      recovery_wrap = ?, recovery_hash = ?, recovery_salt = ?,
+                      recovery_created_at = ?, updated_at = ? WHERE id = ?`,
+  )
+    .bind(
+      nextIndex,
+      await seal(env, nextEmail, `user.email:${user.id}`),
+      await hashAuthKey(env, requireKey(body, "authKey"), salt),
+      toB64(salt),
+      requireIterations(body),
+      await seal(env, requireBlob(body, "protectedKey"), `user.protected_key:${user.id}`),
+      await seal(env, requireBlob(body, "recoveryWrap"), `user.recovery_wrap:${user.id}`),
+      await hashAuthKey(env, requireKey(body, "recoveryAuthKey"), recoverySalt),
+      toB64(recoverySalt),
+      now,
+      now,
+      user.id,
+    )
+    .run();
+
+  // Other devices hold keys derived from the old address and can no longer
+  // unwrap anything, so they are signed out rather than left broken.
+  await destroyOtherSessions(env, session);
+  await audit.record(env, user.id, "email_changed", nextEmail);
+
+  const token = await issueToken(env, user.id, "verify_email", VERIFY_TOKEN_MS);
+  ctx.waitUntil(mail.sendVerification(env, nextEmail, `${env.APP_URL}/app/?verify=${token}`));
+  // The address being left behind is told as well, so an account takeover
+  // cannot happen quietly.
+  ctx.waitUntil(
+    mail.sendEmailChanged(env, previousEmail, nextEmail, new Date(now).toUTCString()),
+  );
+
+  return json({ ok: true, email: nextEmail });
+}
+
 // --- the Recovery Key -------------------------------------------------------
 
 /**

@@ -197,6 +197,19 @@ export const sendPasswordChanged = (env: Env, to: string, when: string) =>
     action: { label: "Open KalmPass", url: `${env.APP_URL}/app/` },
   });
 
+export const sendEmailChanged = (env: Env, to: string, next: string, when: string) =>
+  send(env, to, {
+    subject: "Your KalmPass email address was changed",
+    heading: "Your email address was changed",
+    lines: [
+      `On ${when} the address on your account was changed to ${next}. Signing in now uses the new address.`,
+      "If that was you, nothing further is needed. A fresh Recovery Key was issued at the same time, because your old one no longer opens the vault.",
+      "If it was not you, somebody with your master password has taken the account. Use your Recovery Key immediately to set a new password and take it back.",
+    ],
+    action: { label: "Open KalmPass", url: `${env.APP_URL}/app/` },
+    footnote: "This message went to the previous address on the account, so that a change you did not make cannot happen quietly.",
+  });
+
 export const sendNewDeviceAlert = (env: Env, to: string, device: string, when: string) =>
   send(env, to, {
     subject: "New sign-in to your KalmPass vault",
