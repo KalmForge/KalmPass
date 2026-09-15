@@ -12,6 +12,7 @@
  */
 
 import { loadUser } from "../accounts";
+import { describePrice } from "./billing";
 import { fromB64, timingSafeEqual } from "../crypto";
 import { json, notFound } from "../http";
 import { emailIndex, open } from "../serverkey";
@@ -164,6 +165,7 @@ export async function overview(env: Env, session: Session): Promise<Response> {
   });
 
   return json({
+    stripePrice: await describePrice(env),
     generatedAt: now,
     windowDays: WINDOW_DAYS,
     currency: env.PRO_CURRENCY ?? "GBP",

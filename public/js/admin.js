@@ -67,7 +67,8 @@ function showMessage(title, detail, href) {
 
 function render(data) {
   const t = data.totals;
-  const money = new Intl.NumberFormat("en-GB", {
+  const LOCALES = { USD: "en-US", GBP: "en-GB", EUR: "en-IE" };
+  const money = new Intl.NumberFormat(LOCALES[data.currency] ?? undefined, {
     style: "currency",
     currency: data.currency,
     maximumFractionDigits: 0,
@@ -83,6 +84,7 @@ function render(data) {
       ["Accounts", t.accounts, `${t.verified} confirmed`],
       ["Paying", t.pro, t.accounts ? `${percent(t.pro, t.accounts)} of accounts` : ""],
       ["Price", money.format(data.price), `per ${data.interval}`],
+      ["Stripe price", stripePriceLabel(data), stripePriceDetail(data), stripePriceState(data)],
       [
         "Stripe",
         data.stripe,
@@ -137,6 +139,39 @@ function render(data) {
       }),
     ]),
   );
+}
+
+/**
+ * What Stripe says the configured price actually is, which is the only figure
+ * that matters at the till. A mismatch against the site is flagged rather than
+ * left to be discovered by a customer.
+ */
+function stripePriceLabel(data) {
+  const p = data.stripePrice;
+  if (!p) return "not configured";
+  if (p.error) return "unreadable";
+  return `${p.currency} ${p.amount}`;
+}
+
+function stripePriceDetail(data) {
+  const p = data.stripePrice;
+  if (!p) return "no key or price set";
+  if (p.error) return p.error;
+  if (!p.active) return "this price is archived";
+  if (p.amount !== data.price || p.currency !== data.currency || p.interval !== data.interval) {
+    return `site says ${data.currency} ${data.price} per ${data.interval}`;
+  }
+  return `per ${p.interval}, tax ${p.taxBehavior ?? "unset"}`;
+}
+
+function stripePriceState(data) {
+  const p = data.stripePrice;
+  if (!p || p.error || !p.active) return "attention";
+  const matches =
+    p.amount === data.price && p.currency === data.currency && p.interval === data.interval;
+  // Tax behaviour matters for consumers: exclusive means the advertised figure
+  // is not what a UK or EU customer actually pays.
+  return matches && p.taxBehavior === "inclusive" ? null : "attention";
 }
 
 const percent = (part, whole) => `${Math.round((part / whole) * 100)}%`;

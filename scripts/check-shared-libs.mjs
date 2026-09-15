@@ -33,11 +33,21 @@ if (failed) process.exit(1);
 const config = readFileSync("wrangler.jsonc", "utf8");
 const landing = readFileSync("public/index.html", "utf8");
 
+const SYMBOLS = { GBP: "\u00a3", USD: "$", EUR: "\u20ac" };
+
 const configured = {
   price: /"PRO_PRICE":\s*"([^"]+)"/.exec(config)?.[1],
   interval: /"PRO_INTERVAL":\s*"([^"]+)"/.exec(config)?.[1],
+  currency: /"PRO_CURRENCY":\s*"([^"]+)"/.exec(config)?.[1],
 };
-const advertised = /<p class="amount">£(\d+)\s*<small>a (year|month)<\/small><\/p>/.exec(landing);
+const symbol = SYMBOLS[configured.currency];
+if (!symbol) {
+  console.error(`::error::No symbol known for currency ${configured.currency}.`);
+  process.exit(1);
+}
+const advertised = new RegExp(
+  '<p class="amount">\\' + symbol + '(\\d+)\\s*<small>a (year|month)</small></p>',
+).exec(landing);
 
 if (!advertised) {
   console.error("::error::Could not find the Pro price on the landing page.");
@@ -45,9 +55,12 @@ if (!advertised) {
 }
 if (advertised[1] !== configured.price || advertised[2] !== configured.interval) {
   console.error(
-    `::error::The landing page says £${advertised[1]} a ${advertised[2]} but wrangler.jsonc says ` +
-      `£${configured.price} a ${configured.interval}. They have to agree, and both have to match the Stripe price.`,
+    `::error::The landing page says ${symbol}${advertised[1]} a ${advertised[2]} but wrangler.jsonc ` +
+      `says ${symbol}${configured.price} a ${configured.interval}. They have to agree, and both have ` +
+      `to match the Stripe price.`,
   );
   process.exit(1);
 }
-console.log(`ok  landing page and config agree on £${configured.price} a ${configured.interval}`);
+console.log(
+  `ok  landing page and config agree on ${symbol}${configured.price} a ${configured.interval}`,
+);

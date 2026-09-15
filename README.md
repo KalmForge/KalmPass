@@ -189,8 +189,8 @@ Non-secret settings (`APP_URL`, `MAIL_FROM`, `ALLOW_SIGNUP`) live in
       placeholders. Have a solicitor review them before taking payment.
 - [ ] **Price.** The landing page, `PRO_PRICE` in wrangler.jsonc, and the Stripe
       price must all agree. `npm run lint:libs` checks the first two; only you
-      can check the third. Currently £12 a year, so the Stripe price needs
-      recreating as an annual one and `STRIPE_PRICE_ID` updating.
+      can check the third. `npm run lint:libs` also checks that the currency
+      symbol on the page matches `PRO_CURRENCY`.
 
 ## What this does not protect against
 

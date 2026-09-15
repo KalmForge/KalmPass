@@ -55,6 +55,39 @@ async function stripe(
   return payload;
 }
 
+/**
+ * Reads the configured price back from Stripe.
+ *
+ * The consistency check in CI can compare the landing page against the config,
+ * but it cannot see Stripe, which is the one that actually charges the card. So
+ * the admin page asks, and a price created in the wrong mode or at the wrong
+ * amount shows up there rather than at a customer checkout.
+ */
+export async function describePrice(env: Env): Promise<Record<string, unknown> | null> {
+  if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_ID) return null;
+
+  try {
+    const response = await fetch(`${STRIPE_API}/prices/${env.STRIPE_PRICE_ID}`, {
+      headers: {
+        authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+        "stripe-version": "2026-08-26.dahlia",
+      },
+    });
+    const payload = (await response.json()) as Record<string, any>;
+    if (!response.ok) return { error: payload?.error?.message ?? "Could not read the price." };
+
+    return {
+      amount: typeof payload.unit_amount === "number" ? payload.unit_amount / 100 : null,
+      currency: String(payload.currency ?? "").toUpperCase(),
+      interval: payload.recurring?.interval ?? null,
+      active: payload.active === true,
+      taxBehavior: payload.tax_behavior ?? null,
+    };
+  } catch {
+    return { error: "Could not reach Stripe." };
+  }
+}
+
 // --- checkout ---------------------------------------------------------------
 
 /** POST /api/billing/checkout */

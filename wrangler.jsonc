@@ -35,7 +35,7 @@
     "MAIL_FROM_NAME": "KalmPass",
     "ALLOW_SIGNUP": "true",
     "PRO_PRICE": "12",
-    "PRO_CURRENCY": "GBP",
+    "PRO_CURRENCY": "USD",
     "PRO_INTERVAL": "year"
   },
 
