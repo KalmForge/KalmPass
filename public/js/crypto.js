@@ -191,6 +191,19 @@ export async function deriveRecoveryKeys(recoveryKey, email) {
   return branch(master, "kalmpass/v1/recovery");
 }
 
+// --- passkeys ---------------------------------------------------------------
+
+/**
+ * Splits the secret a passkey produced into the usual two branches.
+ *
+ * No PBKDF2 here, and none needed: unlike a password, the PRF output is already
+ * thirty two bytes of hardware-backed randomness. Stretching it would cost a
+ * second of the user time and add nothing.
+ */
+export async function derivePasskeyKeys(secret) {
+  return branch(new Uint8Array(secret), "kalmpass/v1/passkey");
+}
+
 // --- the vault key ----------------------------------------------------------
 
 export async function generateVaultKey() {

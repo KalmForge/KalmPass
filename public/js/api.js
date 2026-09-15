@@ -62,6 +62,11 @@ export const api = {
   resetConfirm: (body) => request("POST", "/account/reset/confirm", body),
   deleteAccount: (body) => request("DELETE", "/account", body),
 
+  passkeys: () => request("GET", "/account/passkeys"),
+  addPasskey: (body) => request("POST", "/account/passkeys", body),
+  removePasskey: (id) => request("DELETE", `/account/passkeys/${id}`),
+  passkeyLogin: (body) => request("POST", "/account/passkey-login", body),
+
   totpStart: () => request("POST", "/account/totp/start"),
   totpEnable: (code) => request("POST", "/account/totp/enable", { code }),
   totpDisable: (currentAuthKey) => request("POST", "/account/totp/disable", { currentAuthKey }),

@@ -139,3 +139,32 @@ CREATE TABLE IF NOT EXISTS throttle (
   first_fail_at INTEGER NOT NULL,
   locked_until  INTEGER
 );
+
+-- Passkeys that can unlock a vault.
+--
+-- A passkey here is not used to sign a WebAuthn assertion for the server to
+-- verify. It is used for its PRF output: a deterministic secret the
+-- authenticator will only produce for this origin, after the user has proved
+-- themselves to the device. That secret is split like the Recovery Key is, so
+-- what lands in this table is another wrapped copy of the vault key and a
+-- verifier, neither of which the server can open.
+CREATE TABLE IF NOT EXISTS passkeys (
+  id               TEXT    PRIMARY KEY,
+  user_id          TEXT    NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+  -- HMAC(pepper, credential id), so the table cannot be correlated against a
+  -- credential seen anywhere else.
+  credential_index TEXT    NOT NULL UNIQUE,
+  credential_enc   TEXT    NOT NULL,
+
+  auth_hash        TEXT    NOT NULL,
+  server_salt      TEXT    NOT NULL,
+  -- envelope(AES-GCM(passkey enc branch, vault key)).
+  wrapped_key      TEXT    NOT NULL,
+
+  label_enc        TEXT,
+  created_at       INTEGER NOT NULL,
+  last_used_at     INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_passkeys_user ON passkeys (user_id);

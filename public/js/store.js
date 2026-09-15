@@ -17,6 +17,7 @@ import {
   encryptBackup,
   encryptItem,
   generateRecoveryKey,
+  derivePasskeyKeys,
   generateVaultKey,
   normalizeEmail,
   randomBytes,
@@ -76,8 +77,15 @@ export const vault = {
   items: [],
 };
 
-/** Key material, deliberately not a property of the object handed to the UI. */
-const keys = { enc: null, vault: null };
+/**
+ * Key material, deliberately not a property of the object handed to the UI.
+ *
+ * Only the vault key is held. The key derived from the master password exists
+ * just long enough to unwrap it, and the operations that need it again, changing
+ * the password or the address, ask for the password and derive it afresh. There
+ * is no reason to keep a key around that nothing reads.
+ */
+const keys = { vault: null };
 
 /** Held only between the two halves of a Recovery Key flow. */
 let recoveryState = null;
@@ -141,7 +149,6 @@ export async function signup(email, masterPassword, setupCode) {
     ...(setupCode ? { setupCode } : {}),
   });
 
-  keys.enc = account.encKey;
   keys.vault = vaultKey;
   adopt({ ...result, hasRecoveryKey: true });
   emit();
@@ -170,7 +177,6 @@ export async function unlock(email, masterPassword, { totp, backupCode } = {}) {
     ...(backupCode ? { backupCode } : {}),
   });
 
-  keys.enc = encKey;
   keys.vault = await unwrapVaultKey(encKey, result.protectedKey);
   adopt(result);
   await load();
@@ -191,7 +197,6 @@ export async function resume(masterPassword) {
     account.email,
     account.kdfIterations,
   );
-  keys.enc = encKey;
   keys.vault = await unwrapVaultKey(encKey, account.protectedKey);
   adopt(account);
   await load();
@@ -207,7 +212,6 @@ export const hasServerSession = async () => {
 
 /** Drops every key and every plaintext item. The server session is untouched. */
 export function lock() {
-  keys.enc = null;
   keys.vault = null;
   recoveryState = null;
   Object.assign(vault, { locked: true, items: [] });
@@ -222,6 +226,48 @@ export async function signOut() {
     Object.assign(vault, { email: null, totpEnabled: false });
     emit();
   }
+}
+
+// --- passkeys ---------------------------------------------------------------
+
+/**
+ * Registers a passkey against the open vault.
+ *
+ * The secret the authenticator produces is split like the Recovery Key is, and
+ * the vault key is wrapped with the encryption half. Nothing that could open the
+ * vault leaves this function.
+ */
+export async function addPasskey(label) {
+  const { createPasskey } = await import("./passkey.js");
+  const { credentialId, secret } = await createPasskey(vault.email);
+  const { encKey, authKey } = await derivePasskeyKeys(secret);
+  secret.fill(0);
+
+  await api.addPasskey({
+    credentialId,
+    authKey,
+    wrappedKey: await wrapVaultKey(encKey, keys.vault),
+    label: label || "Passkey",
+  });
+}
+
+/** Signs in and opens the vault with a passkey, with nothing typed. */
+export async function unlockWithPasskey() {
+  const { usePasskey } = await import("./passkey.js");
+  const { credentialId, secret } = await usePasskey();
+  const { encKey, authKey } = await derivePasskeyKeys(secret);
+  secret.fill(0);
+
+  const result = await api.passkeyLogin({ credentialId, authKey, deviceId: deviceId() });
+
+  keys.vault = await unwrapVaultKey(encKey, result.wrappedKey);
+  adopt(result);
+  await load();
+
+  return {
+    devicesSignedOut: result.devicesSignedOut ?? 0,
+    deviceLimit: result.deviceLimit ?? null,
+  };
 }
 
 // --- recovery ---------------------------------------------------------------
@@ -460,7 +506,6 @@ export async function changeMasterPassword(currentPassword, nextPassword) {
     protectedKey: await wrapVaultKey(next.encKey, keys.vault),
   });
 
-  keys.enc = next.encKey;
   vault.kdfIterations = iterations;
   emit();
 }
@@ -494,7 +539,6 @@ export async function changeEmail(currentPassword, newEmail) {
     recoveryAuthKey: recovery.authKey,
   });
 
-  keys.enc = next.encKey;
   Object.assign(vault, {
     email: address,
     kdfIterations: iterations,

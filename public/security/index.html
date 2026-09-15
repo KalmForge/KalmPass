@@ -157,6 +157,28 @@
         </tr>
       </table>
 
+      <h2>Passkeys</h2>
+      <p>
+        A passkey can open your vault instead of your master password, without weakening any of
+        the above. It works through the WebAuthn PRF extension: an authenticator will produce a
+        deterministic secret for a given site, and only after you have proved yourself to the
+        device with a fingerprint, a face or a PIN.
+      </p>
+      <p>
+        That secret is treated exactly as the Recovery Key is. Your browser splits it into an
+        encryption branch, which wraps your vault key, and an auth branch, whose hash is all we
+        store. So registering a passkey adds another wrapped copy of a key we still cannot open,
+        and it is phishing resistant for free, because the credential is bound to this site by the
+        platform and a lookalike cannot coax the same secret out of your device.
+      </p>
+      <p>
+        One honesty note. We do not verify a WebAuthn signature: the passkey is used for the secret
+        it derives, not as a signing credential. That means the server cannot tell a genuine
+        authenticator from somebody who has obtained that secret another way. It is the same
+        position as with the Recovery Key, and acceptable for the same reason: the secret never
+        leaves your device in a form anyone else can use.
+      </p>
+
       <h2>Recovery, honestly</h2>
       <p>
         Zero-knowledge encryption and "email me a password reset" cannot both be true. If a server

@@ -10,6 +10,7 @@ import { openSettings, prefs } from "./settings.js";
 import * as store from "./store.js";
 import { isEmail } from "./validate.js";
 import { vault } from "./store.js";
+import { hasPlatformAuthenticator, isSupported } from "./passkey.js";
 import { copy, guard, toast } from "./ui.js";
 import { openEditor, openGenerator, render, updateMeter, view } from "./vault-view.js";
 
@@ -58,6 +59,12 @@ for (const button of document.querySelectorAll("[data-go]")) {
 
 async function start() {
   prefs.load();
+
+  // Offered only where it can actually work, rather than dangled and then
+  // failing once the authenticator turns out not to support PRF.
+  if (isSupported() && (await hasPlatformAuthenticator())) {
+    show($("#signin-passkey"), true);
+  }
 
   const params = new URLSearchParams(location.search);
   const clean = () => history.replaceState(null, "", "/app/");
@@ -170,6 +177,31 @@ $("#view-signin").addEventListener("submit", async (event) => {
   } finally {
     submit.disabled = false;
     submit.textContent = "Unlock";
+  }
+});
+
+$("#signin-passkey").addEventListener("click", async () => {
+  const button = $("#signin-passkey");
+  const error = $("#signin-error");
+  error.hidden = true;
+  button.disabled = true;
+  button.textContent = "Waiting for your passkey...";
+
+  try {
+    const outcome = await store.unlockWithPasskey();
+    enterVault();
+    if (outcome?.devicesSignedOut > 0) {
+      const n = outcome.devicesSignedOut;
+      toast(`Signed out ${n} other device${n === 1 ? "" : "s"}.`);
+    }
+  } catch (err) {
+    // A cancelled prompt is a decision, not a failure worth shouting about.
+    if (err?.name !== "NotAllowedError" && err?.name !== "AbortError") {
+      fail(error, err.message ?? "That passkey did not work.");
+    }
+  } finally {
+    button.disabled = false;
+    button.textContent = "Unlock with a passkey";
   }
 });
 

@@ -20,6 +20,8 @@ export type AuditKind =
   | "account_reset"
   | "email_verified"
   | "email_changed"
+  | "passkey_added"
+  | "passkey_removed"
   | "totp_enabled"
   | "totp_disabled"
   | "sessions_revoked"

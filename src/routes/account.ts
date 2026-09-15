@@ -45,6 +45,7 @@ import {
 } from "../sessions";
 import { assertNotLocked, clearFailures, recordFailure, throttleKey } from "../throttle";
 import { generateTotpSecret, verifyTotp } from "../totp";
+import { requireBlob, requireKey } from "../validate";
 
 const SESSION_MAX_AGE = 12 * 60 * 60;
 const VERIFY_TOKEN_MS = 24 * 60 * 60 * 1000;
@@ -52,26 +53,6 @@ const RESET_TOKEN_MS = 60 * 60 * 1000;
 
 // --- validation -------------------------------------------------------------
 
-/** A 32-byte base64 value, validated before it is allowed anywhere near the DB. */
-function requireKey(body: Record<string, unknown>, field: string): Uint8Array {
-  const raw = requireString(body, field, { max: 128 });
-  let bytes: Uint8Array;
-  try {
-    bytes = fromB64(raw);
-  } catch {
-    throw badRequest(`"${field}" must be base64.`);
-  }
-  if (bytes.length !== KEY_BYTES) throw badRequest(`"${field}" must decode to ${KEY_BYTES} bytes.`);
-  return bytes;
-}
-
-/** base64(iv || ciphertext) produced by the browser. Opaque here, but bounded. */
-function requireBlob(body: Record<string, unknown>, field: string, max = 4096): string {
-  const raw = requireString(body, field, { max });
-  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(raw)) throw badRequest(`"${field}" must be base64.`);
-  if (raw.length < 24) throw badRequest(`"${field}" is too short to be valid ciphertext.`);
-  return raw;
-}
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

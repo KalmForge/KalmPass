@@ -19,6 +19,7 @@ import * as account from "./routes/account";
 import * as admin from "./routes/admin";
 import * as billing from "./routes/billing";
 import * as items from "./routes/items";
+import * as passkeys from "./routes/passkeys";
 import * as tools from "./routes/tools";
 import { type Session, purgeExpired, resolveSession } from "./sessions";
 
@@ -72,6 +73,9 @@ async function route(
     return account.confirmReset(env, request);
   }
   if (path === "/api/billing/webhook" && method === "POST") return billing.webhook(env, request);
+  if (path === "/api/account/passkey-login" && method === "POST") {
+    return passkeys.login(env, request, ctx);
+  }
 
   // --- Signed in -----------------------------------------------------------
   const session = await requireSession(env, request);
@@ -108,6 +112,16 @@ async function route(
   if (path === "/api/account/totp/disable" && method === "POST") {
     return account.totpDisable(env, request, session);
   }
+  if (path === "/api/account/passkeys") {
+    if (method === "GET") return passkeys.list(env, session);
+    if (method === "POST") return passkeys.register(env, request, session);
+  }
+  // Built from a string so the slashes need no escaping.
+  const passkeyMatch = new RegExp("^/api/account/passkeys/([A-Za-z0-9_-]{1,64})$").exec(path);
+  if (passkeyMatch && method === "DELETE") {
+    return passkeys.remove(env, session, passkeyMatch[1] as string);
+  }
+
   if (path === "/api/account/sessions") {
     if (method === "GET") return account.listSessions(env, session);
     if (method === "DELETE") return account.revokeOtherSessions(env, session);

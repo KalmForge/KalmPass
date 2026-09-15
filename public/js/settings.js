@@ -167,6 +167,8 @@ const PANELS = {
         : "Adds a second factor to signing in, so a stolen master password is not enough on its own.",
     ),
 
+    passkeySection(refresh),
+
     section(
       "Auto-lock",
       [
@@ -445,6 +447,115 @@ function changeEmailDialog(refresh) {
       };
     },
   });
+}
+
+/**
+ * Passkeys that can open the vault.
+ *
+ * Each one is another wrapped copy of the vault key, unlocked by a secret the
+ * authenticator will only produce for this site after you have proved yourself
+ * to the device. Removing one removes that copy and nothing else.
+ */
+function passkeySection(refresh) {
+  const container = el("div", { class: "finding" }, [
+    el("h3", { text: "Passkeys" }),
+    el("p", { class: "faint m0", text: "Loading." }),
+  ]);
+
+  const add = el("button", {
+    class: "ghost",
+    type: "button",
+    text: "Add a passkey",
+    onClick: guard(async () => {
+      const done = busy(add, "Waiting for your device...");
+      try {
+        await store.addPasskey(deviceLabel());
+        toast("Passkey added. You can unlock with it from now on.");
+        refresh();
+      } catch (error) {
+        if (error?.name !== "NotAllowedError" && error?.name !== "AbortError") throw error;
+      } finally {
+        done();
+      }
+    }),
+  });
+
+  api
+    .passkeys()
+    .then(({ passkeys }) => {
+      container.replaceChildren(
+        el("h3", { text: "Passkeys" }),
+        el("p", {
+          class: "faint m0",
+          text: "Unlock with a fingerprint, a face or a device PIN instead of typing your master password. Your vault stays just as encrypted: the passkey holds a key to it rather than replacing one.",
+        }),
+        passkeys.length === 0
+          ? el("p", { class: "faint m0", text: "None yet." })
+          : el(
+              "div",
+              { class: "rows" },
+              passkeys.map((key) =>
+                el("div", { class: "entry" }, [
+                  el("div", { class: "entry-main" }, [
+                    el("div", { class: "entry-value", text: key.label }),
+                    el("div", {
+                      class: "faint",
+                      text: key.lastUsedAt
+                        ? "Last used " + relativeTime(key.lastUsedAt)
+                        : "Added " + relativeTime(key.createdAt) + ", not used yet",
+                    }),
+                  ]),
+                  el("div", { class: "entry-actions" }, [
+                    el("button", {
+                      class: "mini",
+                      type: "button",
+                      text: "Remove",
+                      onClick: guard(async () => {
+                        const sure = await confirmDialog({
+                          title: "Remove this passkey?",
+                          message:
+                            "It will no longer open your vault. Your master password and Recovery Key are unaffected.",
+                          confirmLabel: "Remove",
+                          danger: true,
+                        });
+                        if (!sure) return;
+                        await api.removePasskey(key.id);
+                        toast("Passkey removed");
+                        refresh();
+                      }),
+                    }),
+                  ]),
+                ]),
+              ),
+            ),
+        add,
+      );
+    })
+    .catch(() => {
+      container.replaceChildren(
+        el("h3", { text: "Passkeys" }),
+        el("p", { class: "error", text: "Could not load your passkeys." }),
+      );
+    });
+
+  return container;
+}
+
+/** A name for the device being registered, so the list is readable later. */
+function deviceLabel() {
+  const agent = navigator.userAgent;
+  const platform = /Windows/.test(agent)
+    ? "Windows"
+    : /Android/.test(agent)
+      ? "Android"
+      : /iPhone|iPad/.test(agent)
+        ? "iPhone or iPad"
+        : /Mac OS X/.test(agent)
+          ? "Mac"
+          : /Linux/.test(agent)
+            ? "Linux"
+            : "This device";
+  return platform + " passkey";
 }
 
 // --- recovery key -----------------------------------------------------------
