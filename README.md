@@ -62,6 +62,33 @@ and in [`public/security/index.html`](public/security/index.html).
 | **Billing** | Stripe Checkout and customer portal, subscription webhooks, server-enforced plan quotas |
 | **Portability** | Encrypted JSON backups, CSV import from LastPass / Bitwarden / 1Password / Chrome |
 
+## The browser extension
+
+`extension/` is a Manifest V3 Chrome extension. It is not on the Web Store, so
+it is side loaded:
+
+1. Open `chrome://extensions`
+2. Turn on **Developer mode**, top right
+3. **Load unpacked**, and choose the `extension` folder
+
+It asks for four permissions and no more: `storage`, `activeTab`,
+`scripting` and `alarms`, plus host access to `kalmpass.net` alone. There is
+deliberately no content script and no `<all_urls>`, so the extension runs no
+code on any page until you press Fill, and it can never read a page you have
+not pointed it at. Most password manager extensions ask for far more.
+
+Keys live only in the service worker, held in `chrome.storage.session`, which
+is memory backed and cleared when Chrome quits. The popup never receives a
+secret unless you ask to copy that particular one, and filling happens in the
+worker so a password reaches the page without passing through the popup at all.
+
+The extension authenticates with a bearer token rather than the session cookie,
+because a `SameSite=Strict` cookie will not travel from a `chrome-extension://`
+origin. `npm run smoke` exercises that path end to end.
+
+`extension/lib/` holds copies of the crypto modules, since an extension cannot
+import from the website. `npm run lint:libs` fails the build if they drift.
+
 ## Repository layout
 
 ```

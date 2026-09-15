@@ -63,9 +63,22 @@ export async function createSession(
   return { token, expiresAt };
 }
 
-/** Resolves the cookie to a live session, sliding the idle window forward. */
+/**
+ * The browser extension cannot use the cookie: it is SameSite=Strict, so a
+ * request from a chrome-extension:// origin will never carry it. A bearer token
+ * is the same 256 bits of randomness presented a different way, and because it
+ * is not ambient it cannot be used for CSRF.
+ */
+function readBearer(request: Request): string | null {
+  const header = request.headers.get("authorization");
+  if (!header?.startsWith("Bearer ")) return null;
+  const token = header.slice(7).trim();
+  return token.length > 0 ? token : null;
+}
+
+/** Resolves the credential to a live session, sliding the idle window forward. */
 export async function resolveSession(env: Env, request: Request): Promise<Session | null> {
-  const token = readCookie(request, COOKIE_NAME);
+  const token = readCookie(request, COOKIE_NAME) ?? readBearer(request);
   if (!token) return null;
 
   const id = await tokenId(env, token);
@@ -98,7 +111,7 @@ export async function resolveSession(env: Env, request: Request): Promise<Sessio
 }
 
 export async function destroySession(env: Env, request: Request): Promise<void> {
-  const token = readCookie(request, COOKIE_NAME);
+  const token = readCookie(request, COOKIE_NAME) ?? readBearer(request);
   if (!token) return;
   await env.DB.prepare(`DELETE FROM sessions WHERE id = ?`).bind(await tokenId(env, token)).run();
 }
@@ -172,4 +185,4 @@ function readCookie(request: Request, name: string): string | null {
   return null;
 }
 
-export { timingSafeEqual };
+export { readBearer, timingSafeEqual };

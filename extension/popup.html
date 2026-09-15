@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>KalmPass</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <img class="mark" src="icons/icon-32.png" alt="" width="20" height="20" />
+      <span class="wordmark">KalmPass</span>
+      <button id="lock" class="icon" type="button" title="Lock" hidden>Lock</button>
+    </header>
+
+    <main id="loading" class="pad">
+      <p class="dim">Loading.</p>
+    </main>
+
+    <!-- Locked -->
+    <form id="unlock" class="pad stack" hidden>
+      <p class="dim small" id="unlock-note">Unlock your vault to fill passwords.</p>
+
+      <label class="field">
+        <span>Email</span>
+        <input id="email" type="email" autocomplete="username" spellcheck="false" required />
+      </label>
+
+      <label class="field">
+        <span>Master password</span>
+        <input id="password" type="password" autocomplete="current-password" required />
+      </label>
+
+      <label class="field" id="totp-field" hidden>
+        <span id="totp-label">Authenticator code</span>
+        <input id="totp" type="text" inputmode="numeric" maxlength="20" spellcheck="false" />
+      </label>
+
+      <button id="use-backup" class="icon" type="button" hidden>Use a backup code instead</button>
+      <p id="unlock-error" class="error" role="alert" hidden></p>
+      <button id="unlock-submit" class="primary" type="submit">Unlock</button>
+      <p class="dim tiny">
+        Your master password is used here and never sent. It is turned into a key in this
+        extension, the same way the website does it.
+      </p>
+    </form>
+
+    <!-- Unlocked -->
+    <div id="vault" hidden>
+      <div class="search">
+        <input id="search" type="search" placeholder="Search vault" spellcheck="false" autocomplete="off" />
+      </div>
+      <ul id="list" class="list"></ul>
+      <footer class="foot">
+        <span id="account" class="dim tiny"></span>
+        <a id="open-web" href="https://kalmpass.net/app/" target="_blank" rel="noopener">Open vault</a>
+      </footer>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

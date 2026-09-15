@@ -14,7 +14,10 @@
     "types": "wrangler types",
     "tail": "wrangler tail",
     "lint:copy": "node scripts/check-punctuation.mjs",
-    "stripe:secrets": "node scripts/set-stripe-secrets.mjs"
+    "stripe:secrets": "node scripts/set-stripe-secrets.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "lint:libs": "node scripts/check-shared-libs.mjs",
+    "smoke": "node scripts/smoke-test.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

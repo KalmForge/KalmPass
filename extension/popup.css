@@ -1,0 +1,271 @@
+/* KalmPass popup. Same palette as the web app, at popup scale. */
+
+:root {
+  --paper: #ffffff;
+  --sunken: #f2f4f7;
+  --ink: #14181f;
+  --dim: #5a6474;
+  --faint: #8a94a3;
+  --rule: #e2e6ea;
+  --blue: #1b5fc4;
+  --blue-soft: #eaf1fc;
+  --teal: #0c7d69;
+  --bad: #c0362c;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #131a23;
+    --sunken: #0c1219;
+    --ink: #e8ecf2;
+    --dim: #9aa6b6;
+    --faint: #6f7d8f;
+    --rule: #242e3b;
+    --blue: #5aa6f0;
+    --blue-soft: #18283c;
+    --teal: #2fc7ae;
+    --bad: #f07a72;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 340px;
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.dim {
+  color: var(--dim);
+}
+.small {
+  font-size: 12.5px;
+}
+.tiny {
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.error {
+  margin: 0;
+  color: var(--bad);
+  font-size: 12.5px;
+}
+[hidden] {
+  display: none !important;
+}
+
+/* --- chrome -------------------------------------------------------------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.mark {
+  border-radius: 5px;
+}
+.wordmark {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+.icon {
+  border: 1px solid var(--rule);
+  background: none;
+  color: var(--dim);
+  border-radius: 6px;
+  font-size: 11.5px;
+  padding: 3px 9px;
+  cursor: pointer;
+}
+.icon:hover {
+  color: var(--ink);
+  border-color: var(--faint);
+}
+
+.pad {
+  padding: 14px 12px;
+}
+.stack {
+  display: grid;
+  gap: 11px;
+}
+
+/* --- form ---------------------------------------------------------------- */
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+.field > span {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--dim);
+}
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"] {
+  width: 100%;
+  padding: 7px 9px;
+  font: inherit;
+  color: inherit;
+  background: var(--sunken);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  outline: none;
+}
+input:focus-visible {
+  border-color: var(--blue);
+}
+
+button.primary {
+  padding: 8px 12px;
+  font: inherit;
+  font-weight: 560;
+  color: #fff;
+  background: var(--blue);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+button.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- list ---------------------------------------------------------------- */
+
+.search {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.search input {
+  border-radius: 99px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.list li {
+  border-bottom: 1px solid var(--rule);
+  padding: 9px 12px;
+}
+.list li[data-here="true"] {
+  background: var(--blue-soft);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.row-main {
+  min-width: 0;
+  flex: 1;
+}
+.name {
+  font-weight: 560;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub {
+  font-size: 11.5px;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.here {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--blue);
+  flex: none;
+}
+
+.actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 7px;
+  flex-wrap: wrap;
+}
+.actions button {
+  font: inherit;
+  font-size: 11.5px;
+  padding: 3px 9px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--dim);
+  border-radius: 99px;
+  cursor: pointer;
+}
+.actions button:hover {
+  color: var(--ink);
+  border-color: var(--faint);
+}
+.actions button.go {
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.empty {
+  padding: 26px 16px;
+  text-align: center;
+  color: var(--dim);
+  font-size: 12.5px;
+}
+
+/* --- footer -------------------------------------------------------------- */
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--rule);
+}
+.foot a {
+  margin-left: auto;
+  color: var(--blue);
+  font-size: 11.5px;
+  text-decoration: none;
+}
+.foot a:hover {
+  text-decoration: underline;
+}
+
+/* --- toast --------------------------------------------------------------- */
+
+.toast {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  padding: 7px 11px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 12px;
+  text-align: center;
+}

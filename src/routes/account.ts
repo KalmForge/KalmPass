@@ -294,6 +294,15 @@ export async function login(env: Env, request: Request, ctx: ExecutionContext): 
   await clearFailures(env, keys);
   const { token } = await createSession(env, user.id, request, "full");
 
+  /**
+   * The web app never sees its own session token: it lives in an HttpOnly
+   * cookie so that a script on the page cannot read it. The extension has the
+   * opposite constraint, since a SameSite=Strict cookie will not travel from a
+   * chrome-extension:// origin, so it asks for the token explicitly and gets no
+   * cookie in return. One credential either way, never both.
+   */
+  const wantsToken = body["tokenAuth"] === true;
+
   // Free plans are capped on simultaneous devices; the oldest gives way rather
   // than the newest being refused, which is what people actually expect.
   await trimSessionsToLimit(env, user);
@@ -318,8 +327,9 @@ export async function login(env: Env, request: Request, ctx: ExecutionContext): 
       emailVerified: user.email_verified === 1,
       plan: user.plan,
       planStatus: user.plan_status,
+      ...(wantsToken ? { token } : {}),
     },
-    { headers: { "set-cookie": sessionCookie(token, SESSION_MAX_AGE) } },
+    wantsToken ? {} : { headers: { "set-cookie": sessionCookie(token, SESSION_MAX_AGE) } },
   );
 }
 

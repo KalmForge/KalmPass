@@ -29,6 +29,9 @@ jobs:
 
       # A password manager that does not compile is not going anywhere near
       # production, so this gates the deploy rather than running beside it.
+      - name: Check shared libraries
+        run: npm run lint:libs
+
       - name: Typecheck
         run: npm run typecheck
 

@@ -33,6 +33,10 @@ import { type Session, purgeExpired, resolveSession } from "./sessions";
 function assertSameOrigin(request: Request, url: URL): void {
   if (request.method === "GET" || request.method === "HEAD") return;
   if (url.pathname === "/api/billing/webhook") return;
+  // A bearer token is sent deliberately by the caller rather than attached by
+  // the browser, so a cross-site page cannot cause one to be used. CSRF is a
+  // cookie problem, and this request is not using the cookie.
+  if (request.headers.get("authorization")) return;
   if (request.headers.get("origin") !== url.origin) {
     throw new HttpError(403, "bad_origin", "Cross-origin requests are not accepted.");
   }
