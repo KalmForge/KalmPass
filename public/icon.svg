@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="KalmPass">
+  <title>KalmPass</title>
+  <defs>
+    <linearGradient id="kp-bg" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#11419b"/>
+      <stop offset="0.55" stop-color="#0b2a6b"/>
+      <stop offset="1" stop-color="#061634"/>
+    </linearGradient>
+    <linearGradient id="kp-shackle" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#f4fdff"/>
+      <stop offset="1" stop-color="#bfe8ff"/>
+    </linearGradient>
+    <!-- Teal on the left, icy through the middle, deepening to blue on the right. -->
+    <linearGradient id="kp-body" x1="0" y1="0.1" x2="1" y2="0.9">
+      <stop offset="0" stop-color="#3ce6c4"/>
+      <stop offset="0.28" stop-color="#8fe9ea"/>
+      <stop offset="0.46" stop-color="#eaf8ff"/>
+      <stop offset="0.62" stop-color="#5cc2fb"/>
+      <stop offset="1" stop-color="#1c63cf"/>
+    </linearGradient>
+    <linearGradient id="kp-arm" x1="0.2" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6fdff"/>
+      <stop offset="1" stop-color="#bde6ff"/>
+    </linearGradient>
+    <!-- The chevron is drawn full length and trimmed to the lock body. -->
+    <clipPath id="kp-body-clip">
+      <rect x="118" y="182" width="278" height="258" rx="34"/>
+    </clipPath>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="url(#kp-bg)"/>
+
+  <path d="M172 214v-38a85 85 0 0 1 170 0v38" fill="none" stroke="url(#kp-shackle)" stroke-width="44"/>
+
+  <rect x="118" y="182" width="278" height="258" rx="34" fill="url(#kp-body)"/>
+
+  <g clip-path="url(#kp-body-clip)">
+    <!-- The K: a chevron whose vertex meets the keyhole, arms running to the edge. -->
+    <path d="M404 186 L268 311 L404 436" fill="none" stroke="url(#kp-arm)" stroke-width="54" stroke-linejoin="miter"/>
+  </g>
+
+  <g fill="#0a2559">
+    <circle cx="212" cy="303" r="25"/>
+    <path d="M203 303h18l-4 58a5 5 0 0 1-10 0z"/>
+  </g>
+</svg>

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Security — KalmPass</title>
+    <meta
+      name="description"
+      content="Exactly how KalmPass encrypts your vault, what we store, what we can see, and what we cannot do for you."
+    />
+    <meta name="theme-color" content="#071022" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://kalmpass.net/security/" />
+    <link rel="stylesheet" href="/site.css" />
+  </head>
+  <body>
+    <header class="shell">
+      <nav class="nav">
+        <a class="nav-brand" href="/">
+          <img src="/icon.svg" alt="" width="32" height="32" />
+          KalmPass
+        </a>
+        <div class="nav-links">
+          <a href="/#how">How it works</a>
+          <a href="/#pricing">Pricing</a>
+          <a class="btn btn-ghost btn-sm" href="/app/">Sign in</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="prose">
+      <h1>Security</h1>
+      <p>
+        This page describes what KalmPass actually does, in enough detail to be checked. If any of it
+        turns out to be wrong, that is a bug and we want to hear about it.
+      </p>
+
+      <div class="callout">
+        <strong>The short version</strong>
+        <p>
+          Your vault is encrypted in your browser before anything is sent. The key comes from your
+          master password, which never leaves your device. We store ciphertext, and we store it
+          encrypted a second time under a key kept outside the database. There is no mechanism by
+          which KalmPass can read your items, and no support process that can restore them for you.
+        </p>
+      </div>
+
+      <h2>What protects your data</h2>
+
+      <h3>1. Turning a password into a key</h3>
+      <p>
+        Your master password is stretched with PBKDF2-HMAC-SHA256 at <strong>1,000,000
+        iterations</strong>, salted with your email address. OWASP's current floor for PBKDF2-SHA256
+        is 600,000; we sit comfortably above it. Salting with the address means two people who choose
+        the same password still derive different keys, and rules out precomputed tables.
+      </p>
+      <p>
+        The result is split by HKDF-SHA256 into two independent branches: an <em>encryption key</em>
+        that stays in the browser tab, and an <em>auth key</em> that is sent to the server to prove
+        who you are. Because HKDF outputs for different labels are independent, holding the auth key
+        reveals nothing about the encryption key. A fully compromised server still cannot decrypt a
+        single item.
+      </p>
+
+      <h3>2. Encrypting the vault</h3>
+      <p>
+        Items are encrypted with <strong>AES-256-GCM</strong> under a random vault key, with a fresh
+        96-bit IV drawn from the CSPRNG for every single encryption. Item names, usernames, URLs and
+        notes are all inside the encrypted blob, so the database cannot be mined for which sites you
+        hold credentials for. Plaintext is padded to a 256-byte boundary first, so the stored length
+        does not disclose how long a note or a password is.
+      </p>
+      <p>
+        The vault key itself is random and stable. Your master password wraps it rather than
+        encrypting items directly, which is why changing your password takes a moment instead of
+        re-encrypting your whole vault — and why your Recovery Key keeps working afterwards.
+      </p>
+
+      <h3>3. A second layer on our side</h3>
+      <p>
+        Everything the client sends is encrypted <em>again</em> by our server under a key derived
+        from a Cloudflare Worker secret that is never stored in the database. The ciphertext is bound
+        to its row with AES-GCM additional authenticated data, so a blob cannot be lifted out of one
+        record and replayed into another.
+      </p>
+      <p>
+        This layer is not what keeps <em>us</em> out — the client layer already does that. It is
+        there so that a leaked database backup, a stolen storage credential, or a subpoena served on
+        the storage layer alone yields nothing readable at all.
+      </p>
+
+      <h3>4. Even the email address</h3>
+      <p>
+        Account addresses are stored as a keyed HMAC blind index for lookup, plus an encrypted copy.
+        The database holds no readable identifier, so it cannot be mined for a customer list or
+        cross-referenced against a breach corpus.
+      </p>
+
+      <h2>Signing in</h2>
+      <table>
+        <tr>
+          <th>Password verifier</th>
+          <td>
+            The server stores <code>HMAC(pepper, PBKDF2(auth_key, salt, 100k))</code>. The pepper
+            lives in a Worker secret, not the database, so a stolen database cannot be cracked
+            offline at all.
+          </td>
+        </tr>
+        <tr>
+          <th>Sessions</th>
+          <td>
+            256-bit random tokens in an HttpOnly, Secure, SameSite=Strict cookie. Only the HMAC of
+            the token is stored, so the session table cannot be used to mint a login. Sessions expire
+            after 30 minutes idle and 12 hours absolute, whichever comes first.
+          </td>
+        </tr>
+        <tr>
+          <th>Two-factor</th>
+          <td>
+            Optional TOTP (RFC 6238) on the login itself, verified in constant time across the
+            accepted clock-drift window. Ten single-use backup codes are issued, stored only as
+            peppered hashes.
+          </td>
+        </tr>
+        <tr>
+          <th>Rate limiting</th>
+          <td>
+            Failures are counted by email and by IP separately, with exponential lockout, so a flood
+            from one address cannot lock a different account out. Counters are keyed by blind index.
+          </td>
+        </tr>
+        <tr>
+          <th>Enumeration</th>
+          <td>
+            Login spends identical work whether or not the address exists, and always returns the
+            same error. Account reset requests always answer the same way.
+          </td>
+        </tr>
+        <tr>
+          <th>CSRF</th>
+          <td>
+            SameSite=Strict on the session cookie, plus a strict Origin check on every
+            state-changing request.
+          </td>
+        </tr>
+        <tr>
+          <th>The page itself</th>
+          <td>
+            A Content-Security-Policy with no inline script and no external origins at all, plus
+            HSTS, <code>X-Frame-Options: DENY</code>, and <code>no-store</code> on everything. The
+            app loads nothing from a CDN, because a CDN is a place someone else can change your
+            crypto.
+          </td>
+        </tr>
+      </table>
+
+      <h2>Recovery, honestly</h2>
+      <p>
+        Zero-knowledge encryption and "email me a password reset" cannot both be true. If a server
+        can restore your vault from an email link, that server can read your vault — and so can
+        anyone who breaks into it.
+      </p>
+      <p>
+        KalmPass resolves this the way an emergency kit does. At signup you are issued a
+        <strong>Recovery Key</strong>: 125 bits of randomness, printed in Crockford base32 so it
+        cannot be misread. Your vault key is wrapped under it as well as under your master password.
+        Forget the password, use the key, set a new one — nothing is lost, and we still never held
+        anything that could open your vault.
+      </p>
+      <p>
+        Using the Recovery Key issues a fresh one, because the old one has now been typed into a
+        browser. You can also replace it at any time from Settings.
+      </p>
+      <div class="callout">
+        <strong>If you lose both</strong>
+        <p>
+          There is nothing anyone can do. We can clear the account so the address can be used again,
+          but the data is unrecoverable — by us, by you, by anyone. This is the price of the
+          guarantee, and we would rather state it plainly than bury it.
+        </p>
+      </div>
+
+      <h2>What we can see</h2>
+      <table>
+        <tr>
+          <th>Item contents</th>
+          <td>No. Encrypted in your browser under a key we do not have.</td>
+        </tr>
+        <tr>
+          <th>Item names, URLs, usernames</th>
+          <td>No. They are inside the same encrypted blob.</td>
+        </tr>
+        <tr>
+          <th>How many items you have</th>
+          <td>Yes — row counts are visible. Sizes are padded, so lengths are not.</td>
+        </tr>
+        <tr>
+          <th>Your email address</th>
+          <td>
+            Only by decrypting it with the Worker secret, which we do to send you mail. It is not
+            readable from the database alone.
+          </td>
+        </tr>
+        <tr>
+          <th>When you sign in, and from what kind of device</th>
+          <td>Yes — it is in your own activity log, encrypted at rest.</td>
+        </tr>
+        <tr>
+          <th>Your master password or Recovery Key</th>
+          <td>Never. Neither is transmitted, in any form, ever.</td>
+        </tr>
+      </table>
+
+      <h2>Outbound requests</h2>
+      <p>
+        In normal use KalmPass makes no request to anywhere but its own origin. The single exception
+        is the breach check, which you have to press a button to run: your browser SHA-1s a password
+        locally and sends only the <em>first five hex characters</em> to Have I Been Pwned, which
+        returns every hash sharing that prefix. The match is found on your device. We proxy the
+        request so HIBP does not see your IP either.
+      </p>
+
+      <h2>What this does not protect against</h2>
+      <p>Being straight about the limits is part of the job:</p>
+      <ul>
+        <li>
+          <strong>A compromised device.</strong> Malware on your machine, or a browser extension with
+          page access, can read your vault while it is unlocked. Nothing server-side can prevent
+          that.
+        </li>
+        <li>
+          <strong>A weak master password.</strong> A million PBKDF2 rounds multiplies an attacker's
+          cost; it does not rescue a password that was guessable to begin with. Use a passphrase.
+        </li>
+        <li>
+          <strong>A malicious server operator.</strong> We cannot decrypt what you have already sent,
+          but in principle we could serve you altered JavaScript in future. That risk is inherent to
+          every web-delivered password manager, us included. It is why the code is small, dependency-free
+          and published — so the page you are served can be checked against the source.
+        </li>
+        <li>
+          <strong>Losing both keys.</strong> Covered above. Keep a backup.
+        </li>
+      </ul>
+
+      <h2>Reporting a problem</h2>
+      <p>
+        If you find a vulnerability, please email
+        <a href="mailto:security@kalmpass.net">security@kalmpass.net</a> before disclosing it
+        publicly. We will confirm receipt, keep you updated, and credit you if you would like that.
+        We will not threaten anyone who reports a problem in good faith.
+      </p>
+
+      <p class="faint">Last reviewed 15 September 2026.</p>
+    </main>
+
+    <footer>
+      <div class="shell foot">
+        <span>© 2026 KalmPass</span>
+        <nav>
+          <a href="/security/">Security</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/terms/">Terms</a>
+          <a href="/app/">Sign in</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

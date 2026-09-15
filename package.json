@@ -1,0 +1,22 @@
+{
+  "name": "kalmpass",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A personal, zero-knowledge password manager on Cloudflare Workers + D1.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute kalmpass --remote --file=./schema.sql",
+    "db:init:local": "wrangler d1 execute kalmpass --local --file=./schema.sql",
+    "typecheck": "tsc --noEmit",
+    "types": "wrangler types",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "wrangler": "^4.87.0",
+    "@cloudflare/workers-types": "^5.20260911.1"
+  }
+}

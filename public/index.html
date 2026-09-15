@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KalmPass — a password manager that cannot read your passwords</title>
+    <meta
+      name="description"
+      content="KalmPass encrypts your vault in your browser before it is ever sent. We hold no key that can open it — and neither does anyone who breaks in."
+    />
+    <meta name="theme-color" content="#071022" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="canonical" href="https://kalmpass.net/" />
+    <link rel="stylesheet" href="/site.css" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="KalmPass — your passwords, encrypted before they leave your device" />
+    <meta
+      property="og:description"
+      content="Zero-knowledge password management. One master password, one Recovery Key, and nobody else who can read your vault."
+    />
+    <meta property="og:url" content="https://kalmpass.net/" />
+    <meta property="og:image" content="https://kalmpass.net/icon.svg" />
+  </head>
+  <body>
+    <header class="shell">
+      <nav class="nav">
+        <a class="nav-brand" href="/">
+          <img src="/icon.svg" alt="" width="32" height="32" />
+          KalmPass
+        </a>
+        <div class="nav-links">
+          <a href="#how">How it works</a>
+          <a href="#pricing">Pricing</a>
+          <a href="/security/">Security</a>
+          <a class="btn btn-ghost btn-sm" href="/app/">Sign in</a>
+          <a class="btn btn-primary btn-sm" href="/app/?new=1">Get started</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="shell">
+        <section class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">Zero-knowledge by construction</span>
+            <h1>A password manager that cannot read your passwords.</h1>
+            <p>
+              Your vault is encrypted in your browser, with a key made from a master password we
+              never receive. What reaches our servers is ciphertext. There is no copy of your key
+              in our database, no override, and nothing useful to steal.
+            </p>
+            <div class="hero-cta">
+              <a class="btn btn-primary" href="/app/?new=1">Create your vault</a>
+              <a class="btn btn-ghost" href="/security/">Read how it works</a>
+            </div>
+            <p class="faint">Free for 50 items. No card needed. Import from LastPass in a minute.</p>
+          </div>
+          <div class="hero-art">
+            <img src="/icon.svg" alt="The KalmPass padlock" width="280" height="280" />
+          </div>
+        </section>
+      </div>
+
+      <!-- How it works -->
+      <div class="shell">
+        <section id="how">
+          <div class="section-head">
+            <h2>Two keys open your vault. We hold neither.</h2>
+            <p class="dim">
+              Everything in KalmPass is encrypted under one random vault key. That key is wrapped
+              twice — once by your master password, once by your Recovery Key — and only the wrapped
+              copies are stored. Either secret opens your vault. Nothing on our side does.
+            </p>
+          </div>
+
+          <div class="keys">
+            <figure>
+              <span class="chip">Master password</span>
+              <figcaption class="faint">Known only to you. Never transmitted.</figcaption>
+            </figure>
+            <div class="arrow" aria-hidden="true">→</div>
+            <figure>
+              <span class="chip vaultkey">Your vault key</span>
+              <figcaption class="faint">Decrypts your items, in your browser only.</figcaption>
+            </figure>
+            <figure>
+              <span class="chip">Recovery Key</span>
+              <figcaption class="faint">Issued once at signup. Saved offline by you.</figcaption>
+            </figure>
+            <div class="arrow" aria-hidden="true">→</div>
+            <figure>
+              <span class="chip vaultkey">The same vault key</span>
+              <figcaption class="faint">Your way back in if the password goes.</figcaption>
+            </figure>
+          </div>
+        </section>
+      </div>
+
+      <!-- Features -->
+      <div class="shell">
+        <section>
+          <div class="section-head">
+            <h2>Everything you actually use, and nothing you do not.</h2>
+          </div>
+
+          <div class="grid">
+            <article class="card">
+              <div class="card-icon" aria-hidden="true">⚡</div>
+              <h3>A generator worth trusting</h3>
+              <p>
+                Passwords and passphrases drawn from the browser's cryptographic random source, with
+                the modulo bias that trips up most generators removed. It shows you the real entropy,
+                not a coloured bar.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon" aria-hidden="true">⏱</div>
+              <h3>Authenticator codes</h3>
+              <p>
+                Keep your two-factor codes beside the password they belong to. The seeds are
+                encrypted with everything else and the codes are computed on your device, so we
+                never see either half.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon" aria-hidden="true">🩺</div>
+              <h3>Vault health</h3>
+              <p>
+                Finds weak passwords, reused ones, and anything untouched for over a year. Pro adds
+                breach checking against Have I Been Pwned, using k-anonymity so your passwords are
+                never sent anywhere.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon" aria-hidden="true">↕</div>
+              <h3>Import and export, freely</h3>
+              <p>
+                Bring a CSV from LastPass, Bitwarden, 1Password or Chrome. Take an encrypted backup
+                whenever you like. Your data is yours, and leaving is never made difficult.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon" aria-hidden="true">🔒</div>
+              <h3>Locks itself</h3>
+              <p>
+                Idle for a while and the keys are dropped from memory. Copied passwords clear from
+                the clipboard on a timer. Nothing is ever written to disk — closing the tab really
+                is the end of it.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon" aria-hidden="true">📖</div>
+              <h3>Readable in an afternoon</h3>
+              <p>
+                No runtime dependencies — not one. The entire thing is a few thousand lines you can
+                read yourself, which is a claim very few password managers can make.
+              </p>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <!-- Pricing -->
+      <div class="shell">
+        <section id="pricing">
+          <div class="section-head">
+            <h2>Simple pricing.</h2>
+            <p class="dim">
+              The encryption is identical on both plans. Pro buys capacity, not safety — we are not
+              going to sell you your own security.
+            </p>
+          </div>
+
+          <div class="plans">
+            <div class="plan">
+              <div class="plan-name">Free</div>
+              <div class="plan-price">£0</div>
+              <ul>
+                <li>Up to 50 items</li>
+                <li>2 devices</li>
+                <li>Authenticator codes</li>
+                <li>Password generator</li>
+                <li>Encrypted import and export</li>
+                <li>Weak and reused password report</li>
+                <li data-no>Breach monitoring</li>
+              </ul>
+              <a class="btn btn-ghost" href="/app/?new=1">Start free</a>
+            </div>
+
+            <div class="plan" data-featured="true">
+              <div class="plan-name">Pro <span class="tag">Everything</span></div>
+              <div class="plan-price">£2 <span>/ month</span></div>
+              <ul>
+                <li>Unlimited items</li>
+                <li>Unlimited devices</li>
+                <li>Breach monitoring</li>
+                <li>Everything in Free</li>
+                <li>Priority support</li>
+              </ul>
+              <a class="btn btn-primary" href="/app/?new=1">Get Pro</a>
+              <p class="faint">Cancel any time. Your vault stays readable on Free — we never delete items.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- FAQ -->
+      <div class="shell">
+        <section>
+          <div class="section-head">
+            <h2>The awkward questions.</h2>
+          </div>
+
+          <details open>
+            <summary>What happens if I forget my master password?</summary>
+            <p>
+              You use your Recovery Key — a 125-bit key issued once when you sign up, which you save
+              offline. It opens your vault and lets you set a new password, with nothing lost. If you
+              lose both your password and that key, your data is genuinely gone: there is no key in
+              existence that can decrypt it. That is the direct cost of us not holding one, and we
+              would rather be honest about it than pretend otherwise.
+            </p>
+          </details>
+
+          <details>
+            <summary>Could you be forced to hand over my passwords?</summary>
+            <p>
+              We can be compelled to hand over what we hold, which is encrypted blobs and the account
+              email. We cannot be compelled to produce a key we have never had. Your master password
+              is not transmitted, so it is not ours to give up.
+            </p>
+          </details>
+
+          <details>
+            <summary>What if KalmPass is breached?</summary>
+            <p>
+              An attacker with our entire database gets ciphertext. Vault contents are encrypted in
+              your browser under your key, and then encrypted again by our servers under a key stored
+              outside the database. Even email addresses are stored as keyed hashes rather than in
+              the clear.
+            </p>
+          </details>
+
+          <details>
+            <summary>What if KalmPass disappears?</summary>
+            <p>
+              Export an encrypted backup whenever you like — it is a single JSON file protected by a
+              passphrase you choose, and it restores without us. We would rather you had one than
+              depended on us being here forever.
+            </p>
+          </details>
+
+          <details>
+            <summary>Is there a browser extension?</summary>
+            <p>
+              Not yet. The web vault works on every device, installs as an app from your browser, and
+              copies to the clipboard with an auto-clear timer. Autofill is the next thing we want to
+              build.
+            </p>
+          </details>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="shell foot">
+        <span>© 2026 KalmPass</span>
+        <nav>
+          <a href="/security/">Security</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/terms/">Terms</a>
+          <a href="/app/">Sign in</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

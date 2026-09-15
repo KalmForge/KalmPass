@@ -1,0 +1,175 @@
+/**
+ * Session handling.
+ *
+ * The cookie carries 256 bits of randomness. D1 stores only HMAC(pepper, token),
+ * so a database read cannot mint a session, and the peppering means the hashes
+ * cannot be precomputed either. Sessions expire twice over: an idle timeout that
+ * slides forward with use, and an absolute ceiling that does not.
+ */
+
+import type { UserRow } from "./accounts";
+import { randomToken, timingSafeEqual } from "./crypto";
+import { planOf } from "./accounts";
+import { pepper, seal } from "./serverkey";
+
+export const COOKIE_NAME = "kp_session";
+
+const IDLE_MS = 30 * 60 * 1000;
+const ABSOLUTE_MS = 12 * 60 * 60 * 1000;
+
+/**
+ * `full` is an ordinary signed-in session. `recovery` is issued only by the
+ * Recovery Key flow and may do exactly one thing — finish that flow. It can
+ * never read an item.
+ */
+export type SessionScope = "full" | "recovery";
+
+export interface Session {
+  id: string;
+  userId: string;
+  scope: SessionScope;
+}
+
+const tokenId = (env: Env, token: string) => pepper(env, `session:${token}`);
+
+export async function createSession(
+  env: Env,
+  userId: string,
+  request: Request,
+  scope: SessionScope = "full",
+): Promise<{ token: string; expiresAt: number }> {
+  const token = randomToken();
+  const id = await tokenId(env, token);
+  const now = Date.now();
+
+  // A recovery session is short-lived by design: it exists for one task.
+  const idle = scope === "recovery" ? 30 * 60 * 1000 : IDLE_MS;
+  const expiresAt = now + idle;
+
+  const label = await seal(
+    env,
+    (request.headers.get("user-agent") ?? "unknown").slice(0, 300),
+    `session.label:${id}`,
+  );
+
+  await env.DB.prepare(
+    `INSERT INTO sessions (id, user_id, scope, created_at, expires_at, absolute_end,
+                           last_seen_at, label_enc)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  )
+    .bind(id, userId, scope, now, expiresAt, now + (scope === "recovery" ? idle : ABSOLUTE_MS), now, label)
+    .run();
+
+  return { token, expiresAt };
+}
+
+/** Resolves the cookie to a live session, sliding the idle window forward. */
+export async function resolveSession(env: Env, request: Request): Promise<Session | null> {
+  const token = readCookie(request, COOKIE_NAME);
+  if (!token) return null;
+
+  const id = await tokenId(env, token);
+  const now = Date.now();
+
+  const row = await env.DB.prepare(
+    `SELECT id, user_id, scope, expires_at, absolute_end FROM sessions WHERE id = ?`,
+  )
+    .bind(id)
+    .first<{
+      id: string;
+      user_id: string;
+      scope: SessionScope;
+      expires_at: number;
+      absolute_end: number;
+    }>();
+
+  if (!row) return null;
+  if (row.expires_at <= now || row.absolute_end <= now) {
+    await env.DB.prepare(`DELETE FROM sessions WHERE id = ?`).bind(id).run();
+    return null;
+  }
+
+  // Extend, but never past the absolute ceiling.
+  await env.DB.prepare(`UPDATE sessions SET expires_at = ?, last_seen_at = ? WHERE id = ?`)
+    .bind(Math.min(now + IDLE_MS, row.absolute_end), now, id)
+    .run();
+
+  return { id: row.id, userId: row.user_id, scope: row.scope };
+}
+
+export async function destroySession(env: Env, request: Request): Promise<void> {
+  const token = readCookie(request, COOKIE_NAME);
+  if (!token) return;
+  await env.DB.prepare(`DELETE FROM sessions WHERE id = ?`).bind(await tokenId(env, token)).run();
+}
+
+export async function destroyOtherSessions(env: Env, session: Session): Promise<number> {
+  const result = await env.DB.prepare(`DELETE FROM sessions WHERE user_id = ? AND id != ?`)
+    .bind(session.userId, session.id)
+    .run();
+  return result.meta.changes ?? 0;
+}
+
+export async function destroyAllSessions(env: Env, userId: string): Promise<void> {
+  await env.DB.prepare(`DELETE FROM sessions WHERE user_id = ?`).bind(userId).run();
+}
+
+/**
+ * Enforces the plan's device limit by dropping the least recently used sessions.
+ *
+ * Signing the oldest device out is friendlier than refusing the newest sign-in:
+ * someone locked out of the device in their hand cannot reach the setting that
+ * would fix it.
+ */
+export async function trimSessionsToLimit(env: Env, user: UserRow): Promise<void> {
+  const limit = planOf(user).devices;
+  if (limit === null) return;
+
+  await env.DB.prepare(
+    `DELETE FROM sessions
+      WHERE user_id = ?1 AND scope = 'full' AND id NOT IN (
+        SELECT id FROM sessions WHERE user_id = ?1 AND scope = 'full'
+        ORDER BY last_seen_at DESC LIMIT ?2
+      )`,
+  )
+    .bind(user.id, limit)
+    .run();
+}
+
+/** Housekeeping — expired rows are useless and should not accumulate. */
+export async function purgeExpired(env: Env): Promise<void> {
+  const now = Date.now();
+  await env.DB.batch([
+    env.DB.prepare(`DELETE FROM sessions WHERE expires_at <= ? OR absolute_end <= ?`).bind(now, now),
+    env.DB.prepare(`DELETE FROM tokens WHERE expires_at <= ? OR used_at IS NOT NULL`).bind(now),
+  ]);
+}
+
+export function sessionCookie(token: string, maxAgeSeconds: number): string {
+  // Secure + HttpOnly keeps it off the page entirely; SameSite=Strict means no
+  // cross-site request can ever carry it, which is the CSRF defence.
+  return [
+    `${COOKIE_NAME}=${token}`,
+    "Path=/",
+    "HttpOnly",
+    "Secure",
+    "SameSite=Strict",
+    `Max-Age=${maxAgeSeconds}`,
+  ].join("; ");
+}
+
+export const clearedCookie = (): string =>
+  `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
+
+function readCookie(request: Request, name: string): string | null {
+  const header = request.headers.get("cookie");
+  if (!header) return null;
+  for (const part of header.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() === name) return part.slice(eq + 1).trim();
+  }
+  return null;
+}
+
+export { timingSafeEqual };

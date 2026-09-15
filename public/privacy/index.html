@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — KalmPass</title>
+    <meta name="description" content="What KalmPass collects, why, and how little of it we can actually read." />
+    <meta name="theme-color" content="#071022" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://kalmpass.net/privacy/" />
+    <link rel="stylesheet" href="/site.css" />
+  </head>
+  <body>
+    <header class="shell">
+      <nav class="nav">
+        <a class="nav-brand" href="/">
+          <img src="/icon.svg" alt="" width="32" height="32" />
+          KalmPass
+        </a>
+        <div class="nav-links">
+          <a href="/security/">Security</a>
+          <a class="btn btn-ghost btn-sm" href="/app/">Sign in</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="prose">
+      <h1>Privacy Policy</h1>
+      <p class="faint">Last updated 15 September 2026.</p>
+
+      <div class="callout">
+        <strong>Draft — have this reviewed before you take payment.</strong>
+        <p>
+          This is a working draft written to match what the software actually does. It is not legal
+          advice, and the bracketed details still need filling in. A solicitor should review it
+          before KalmPass is sold commercially.
+        </p>
+      </div>
+
+      <h2>Who we are</h2>
+      <p>
+        KalmPass is operated by <strong>[legal entity name]</strong>, <strong>[registered
+        address]</strong>, <strong>[company number]</strong>. For UK GDPR and EU GDPR purposes we are
+        the data controller for the information described below. Contact:
+        <a href="mailto:privacy@kalmpass.net">privacy@kalmpass.net</a>.
+      </p>
+
+      <h2>The short version</h2>
+      <p>
+        We cannot read your vault. It is encrypted on your device with a key derived from a master
+        password we never receive. What we hold is ciphertext plus the small amount of account data
+        needed to run a subscription service. We do not sell data, we do not run advertising, and we
+        do not use third-party analytics or tracking cookies.
+      </p>
+
+      <h2>What we collect</h2>
+      <table>
+        <tr>
+          <th>Vault contents</th>
+          <td>
+            Stored only as ciphertext. We hold no key capable of decrypting it. Lawful basis:
+            performance of our contract with you.
+          </td>
+        </tr>
+        <tr>
+          <th>Email address</th>
+          <td>
+            Stored encrypted, plus a keyed hash used for lookup. Used to identify your account, send
+            service and security notices, and confirm ownership. Lawful basis: contract, and our
+            legitimate interest in securing accounts.
+          </td>
+        </tr>
+        <tr>
+          <th>Authentication data</th>
+          <td>
+            A peppered hash of a verifier derived from your master password — never the password
+            itself. Optional two-factor secrets, stored encrypted. Lawful basis: contract.
+          </td>
+        </tr>
+        <tr>
+          <th>Account activity</th>
+          <td>
+            Sign-ins, password changes, recovery events and plan changes, with a coarse device
+            description (for example "Chrome on Windows"), stored encrypted and shown to you in the
+            app. Lawful basis: legitimate interest in detecting unauthorised access.
+          </td>
+        </tr>
+        <tr>
+          <th>Billing data</th>
+          <td>
+            If you subscribe, Stripe processes your payment and we store only their customer and
+            subscription identifiers, encrypted. We never see your card details. Lawful basis:
+            contract, and legal obligation for tax records.
+          </td>
+        </tr>
+        <tr>
+          <th>Technical logs</th>
+          <td>
+            Cloudflare processes request metadata, including IP addresses, to deliver and protect the
+            service. Rate-limit counters store only keyed hashes of addresses, never the addresses
+            themselves. Lawful basis: legitimate interest in security and abuse prevention.
+          </td>
+        </tr>
+      </table>
+
+      <h2>Cookies</h2>
+      <p>
+        One cookie: a session token, set when you sign in. It is strictly necessary to operate the
+        service, HttpOnly, Secure and SameSite=Strict, and it expires within twelve hours. We use no
+        analytics, advertising or tracking cookies, which is why you were not shown a banner.
+      </p>
+
+      <h2>Who we share it with</h2>
+      <ul>
+        <li>
+          <strong>Cloudflare, Inc.</strong> — hosting, database and email delivery. Data is held in
+          Cloudflare's network; the database region is <strong>[Western Europe]</strong>.
+        </li>
+        <li>
+          <strong>Stripe, Inc.</strong> — payment processing, for subscribers only. Stripe is the
+          controller of your payment details.
+        </li>
+        <li>
+          <strong>Have I Been Pwned</strong> — only if you run a breach check, and only a five-character
+          hash prefix, proxied through our servers so your IP is not disclosed.
+        </li>
+      </ul>
+      <p>
+        We do not sell personal data, and we do not share it for advertising. International transfers
+        to the above processors rely on the UK IDTA and EU standard contractual clauses.
+      </p>
+
+      <h2>How long we keep it</h2>
+      <ul>
+        <li>Vault items: until you delete them. Trashed items are purged after 30 days.</li>
+        <li>Account data: until you delete your account, then removed immediately.</li>
+        <li>Activity log: 180 days.</li>
+        <li>Sessions and email links: until they expire, then removed.</li>
+        <li>Billing records: as long as tax law requires, typically six years.</li>
+      </ul>
+
+      <h2>Your rights</h2>
+      <p>
+        Under UK and EU GDPR you may request access, correction, erasure, restriction, portability,
+        or object to processing. In practice:
+      </p>
+      <ul>
+        <li>
+          <strong>Access and portability</strong> — Settings → Backup exports your entire vault in a
+          standard encrypted file, immediately and without asking us.
+        </li>
+        <li>
+          <strong>Erasure</strong> — Settings → About → Delete account removes everything at once.
+        </li>
+        <li>
+          <strong>Anything else</strong> — email
+          <a href="mailto:privacy@kalmpass.net">privacy@kalmpass.net</a> and we will respond within
+          30 days.
+        </li>
+      </ul>
+      <p>
+        Note that we cannot correct or produce a readable copy of your vault contents, because we
+        cannot read them. You can do both yourself from within the app.
+      </p>
+      <p>
+        If you are unhappy with how we have handled your data you may complain to the UK Information
+        Commissioner's Office at <a href="https://ico.org.uk/">ico.org.uk</a>, or to your local
+        supervisory authority in the EU.
+      </p>
+
+      <h2>Breach notification</h2>
+      <p>
+        If we suffer a breach affecting personal data we will notify the ICO within 72 hours where
+        required, and tell affected users directly. Because vault contents are encrypted with keys we
+        do not hold, a breach of our systems would not expose them — but we will say plainly what
+        happened rather than minimise it.
+      </p>
+
+      <h2>Children</h2>
+      <p>KalmPass is not directed at children under 13, and we do not knowingly hold their data.</p>
+
+      <h2>Changes</h2>
+      <p>
+        If we change this policy materially we will email account holders before it takes effect.
+        Previous versions are kept in the public repository.
+      </p>
+    </main>
+
+    <footer>
+      <div class="shell foot">
+        <span>© 2026 KalmPass</span>
+        <nav>
+          <a href="/security/">Security</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/terms/">Terms</a>
+          <a href="/app/">Sign in</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

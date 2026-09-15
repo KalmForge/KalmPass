@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>KalmPass</title>
+    <meta name="description" content="Your KalmPass vault." />
+    <meta name="theme-color" content="#081326" />
+    <meta name="color-scheme" content="dark light" />
+    <!-- A vault should not be summarised by anyone's crawler. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <div id="boot" class="boot">
+      <div class="boot-mark" aria-hidden="true"></div>
+      <p class="boot-text">Starting KalmPass…</p>
+      <noscript>
+        <p class="boot-text">
+          KalmPass decrypts your vault in the browser, so it needs JavaScript enabled.
+        </p>
+      </noscript>
+    </div>
+
+    <section id="screen-auth" class="auth" hidden>
+      <div class="auth-card">
+        <header class="auth-head">
+          <img class="mark" src="/icon.svg" alt="" width="52" height="52" />
+          <h1>KalmPass</h1>
+          <p id="auth-tagline" class="muted">Your vault, locked to your master password.</p>
+        </header>
+
+        <!-- Sign in -->
+        <form id="view-signin" class="stack auth-view" novalidate>
+          <label class="field">
+            <span>Email</span>
+            <input id="signin-email" type="email" autocomplete="username" required
+                   spellcheck="false" autocapitalize="off" />
+          </label>
+          <label class="field">
+            <span>Master password</span>
+            <input id="signin-password" type="password" autocomplete="current-password" required />
+          </label>
+          <label class="field" id="signin-totp-field" hidden>
+            <span id="signin-totp-label">Authenticator code</span>
+            <input id="signin-totp" type="text" inputmode="numeric" autocomplete="one-time-code"
+                   maxlength="20" spellcheck="false" />
+          </label>
+          <p id="signin-error" class="error" role="alert" hidden></p>
+          <button id="signin-submit" class="primary" type="submit">Unlock</button>
+          <button class="link" type="button" data-go="recover">Forgot your master password?</button>
+          <button class="link" type="button" data-go="signup">Create an account</button>
+          <button id="signin-use-backup" class="link" type="button" hidden>
+            Use a backup code instead
+          </button>
+        </form>
+
+        <!-- Create an account -->
+        <form id="view-signup" class="stack auth-view" novalidate hidden>
+          <label class="field" id="signup-invite-field" hidden>
+            <span>Invite code</span>
+            <input id="signup-invite" type="text" autocomplete="off" spellcheck="false" />
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input id="signup-email" type="email" autocomplete="username" required
+                   spellcheck="false" autocapitalize="off" />
+          </label>
+          <label class="field">
+            <span>Master password</span>
+            <input id="signup-password" type="password" autocomplete="new-password" required />
+          </label>
+          <div id="signup-meter" class="meter" aria-hidden="true">
+            <div class="meter-bar"><span></span></div>
+            <p class="meter-text muted"></p>
+          </div>
+          <label class="field">
+            <span>Confirm master password</span>
+            <input id="signup-confirm" type="password" autocomplete="new-password" required />
+          </label>
+          <button id="signup-suggest" class="link" type="button">Suggest a strong passphrase</button>
+
+          <div class="warn">
+            <strong>We cannot reset this password.</strong>
+            Your vault is encrypted with it before it ever leaves this device, so nobody at
+            KalmPass can read your data or let you back in. You will get a Recovery Key on the
+            next screen — that is the safety net.
+          </div>
+
+          <label class="check">
+            <input id="signup-ack" type="checkbox" required />
+            <span>I understand, and I will save my Recovery Key somewhere safe.</span>
+          </label>
+
+          <p id="signup-error" class="error" role="alert" hidden></p>
+          <button id="signup-submit" class="primary" type="submit">Create my vault</button>
+          <button class="link" type="button" data-go="signin">I already have an account</button>
+        </form>
+
+        <!-- Emergency Kit -->
+        <div id="view-kit" class="stack auth-view" hidden>
+          <div class="warn">
+            <strong>This is the only time you will see this.</strong>
+            Your Recovery Key is the one way back into your vault if you forget your master
+            password. Print it, or write it down and keep it somewhere safe — not in this vault.
+          </div>
+          <div id="kit-key" class="readout kit-key"></div>
+          <div class="kit-actions">
+            <button id="kit-copy" class="ghost" type="button">Copy</button>
+            <button id="kit-download" class="ghost" type="button">Download Emergency Kit</button>
+            <button id="kit-print" class="ghost" type="button">Print</button>
+          </div>
+          <label class="check">
+            <input id="kit-ack" type="checkbox" />
+            <span>I have saved my Recovery Key somewhere safe.</span>
+          </label>
+          <button id="kit-continue" class="primary" type="button" disabled>Open my vault</button>
+        </div>
+
+        <!-- Recover with the Recovery Key -->
+        <form id="view-recover" class="stack auth-view" novalidate hidden>
+          <p class="muted" style="margin:0">
+            Enter your Recovery Key and we will let you set a new master password. Your items stay
+            exactly as they are.
+          </p>
+          <label class="field">
+            <span>Email</span>
+            <input id="recover-email" type="email" autocomplete="username" required
+                   spellcheck="false" autocapitalize="off" />
+          </label>
+          <label class="field">
+            <span>Recovery Key</span>
+            <input id="recover-key" type="text" placeholder="KP1-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+                   autocomplete="off" spellcheck="false" autocapitalize="characters" />
+          </label>
+          <p id="recover-error" class="error" role="alert" hidden></p>
+          <button id="recover-submit" class="primary" type="submit">Continue</button>
+          <button class="link" type="button" data-go="reset">I have lost my Recovery Key too</button>
+          <button class="link" type="button" data-go="signin">Back to sign in</button>
+        </form>
+
+        <!-- Set a new master password after recovery -->
+        <form id="view-recover-set" class="stack auth-view" novalidate hidden>
+          <p class="muted" style="margin:0">
+            Recovery Key accepted. Choose a new master password — your vault is waiting.
+          </p>
+          <label class="field">
+            <span>New master password</span>
+            <input id="recover-password" type="password" autocomplete="new-password" required />
+          </label>
+          <div id="recover-meter" class="meter" aria-hidden="true">
+            <div class="meter-bar"><span></span></div>
+            <p class="meter-text muted"></p>
+          </div>
+          <label class="field">
+            <span>Confirm new password</span>
+            <input id="recover-confirm" type="password" autocomplete="new-password" required />
+          </label>
+          <p id="recover-set-error" class="error" role="alert" hidden></p>
+          <button id="recover-set-submit" class="primary" type="submit">Set password</button>
+        </form>
+
+        <!-- Last resort: erase and start again -->
+        <form id="view-reset" class="stack auth-view" novalidate hidden>
+          <div class="warn">
+            <strong>This erases your vault.</strong>
+            Without your master password or your Recovery Key, there is no key in existence that
+            can decrypt your data — not ours, not Cloudflare's. All we can do is clear the account
+            so you can start again.
+          </div>
+          <label class="field">
+            <span>Email</span>
+            <input id="reset-email" type="email" autocomplete="username" required
+                   spellcheck="false" autocapitalize="off" />
+          </label>
+          <p id="reset-error" class="error" role="alert" hidden></p>
+          <p id="reset-sent" class="muted" hidden>
+            If that address has an account, an email is on its way. The link is good for one hour.
+          </p>
+          <button id="reset-submit" class="primary" type="submit">Email me a reset link</button>
+          <button class="link" type="button" data-go="recover">I found my Recovery Key</button>
+          <button class="link" type="button" data-go="signin">Back to sign in</button>
+        </form>
+
+        <!-- Arriving from the reset email -->
+        <form id="view-reset-set" class="stack auth-view" novalidate hidden>
+          <div class="warn">
+            <strong>Continuing destroys everything in this vault.</strong>
+            This is final. If you have a backup file you can restore it afterwards.
+          </div>
+          <label class="field">
+            <span>Email</span>
+            <input id="reset-set-email" type="email" autocomplete="username" required
+                   spellcheck="false" autocapitalize="off" />
+          </label>
+          <label class="field">
+            <span>New master password</span>
+            <input id="reset-set-password" type="password" autocomplete="new-password" required />
+          </label>
+          <div id="reset-meter" class="meter" aria-hidden="true">
+            <div class="meter-bar"><span></span></div>
+            <p class="meter-text muted"></p>
+          </div>
+          <label class="field">
+            <span>Confirm new password</span>
+            <input id="reset-set-confirm" type="password" autocomplete="new-password" required />
+          </label>
+          <p id="reset-set-error" class="error" role="alert" hidden></p>
+          <button id="reset-set-submit" class="danger" type="submit">Erase vault and start over</button>
+          <button class="link" type="button" data-go="signin">Cancel</button>
+        </form>
+      </div>
+    </section>
+
+    <div id="screen-vault" class="shell" hidden>
+      <div id="banner" class="banner" hidden></div>
+
+      <header class="topbar">
+        <button id="nav-toggle" class="icon-btn only-narrow" type="button" aria-label="Menu">
+          <span class="i-menu" aria-hidden="true"></span>
+        </button>
+
+        <a class="brand" href="/">
+          <img src="/icon.svg" alt="" width="26" height="26" />
+          <span>KalmPass</span>
+        </a>
+
+        <div class="search">
+          <input id="search" type="search" placeholder="Search vault" aria-label="Search vault"
+                 spellcheck="false" autocomplete="off" />
+        </div>
+
+        <div class="topbar-actions">
+          <span id="plan-badge" class="plan-badge" hidden></span>
+          <button id="btn-generate" class="ghost" type="button">Generate</button>
+          <button id="btn-new" class="primary" type="button">New item</button>
+          <button id="btn-settings" class="icon-btn" type="button" aria-label="Settings">
+            <span class="i-gear" aria-hidden="true"></span>
+          </button>
+          <button id="btn-lock" class="icon-btn" type="button" aria-label="Lock vault">
+            <span class="i-lock" aria-hidden="true"></span>
+          </button>
+        </div>
+      </header>
+
+      <div class="body">
+        <nav id="sidebar" class="sidebar" aria-label="Filters"></nav>
+        <section id="list" class="list" aria-label="Items"></section>
+        <section id="detail" class="detail" aria-label="Item details"></section>
+      </div>
+    </div>
+
+    <dialog id="modal" class="modal"></dialog>
+    <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

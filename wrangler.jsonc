@@ -1,0 +1,43 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "kalmpass",
+  "main": "./src/index.ts",
+  "compatibility_date": "2026-09-15",
+
+  // The marketing site and the app are both served straight from the edge as
+  // static assets. The Worker only ever runs for /api/* — it renders no HTML, so
+  // there is no template injection surface anywhere in the product.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+
+  "routes": [
+    { "pattern": "kalmpass.net", "custom_domain": true },
+    { "pattern": "www.kalmpass.net", "custom_domain": true }
+  ],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kalmpass",
+      "database_id": "0be87ac7-bfe4-41f8-8be7-8d2c59379931"
+    }
+  ],
+
+  "send_email": [{ "name": "EMAIL" }],
+
+  "vars": {
+    "APP_URL": "https://kalmpass.net",
+    "MAIL_FROM": "no-reply@kalmpass.net",
+    "MAIL_FROM_NAME": "KalmPass",
+    "ALLOW_SIGNUP": "true"
+  },
+
+  // Nightly housekeeping: expired sessions, spent tokens, stale trash, old audit.
+  "triggers": { "crons": ["17 4 * * *"] },
+
+  "observability": { "enabled": true }
+}

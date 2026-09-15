@@ -1,0 +1,20 @@
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'; require-trusted-types-for 'script'
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=(), interest-cohort=()
+  Cache-Control: no-store
+
+# The vault must never be indexed, cached, or reachable from another origin.
+/app/*
+  X-Robots-Tag: noindex, nofollow
+
+# Public marketing assets hold nothing sensitive, so they may be cached briefly.
+/site.css
+  Cache-Control: public, max-age=3600
+/icon.svg
+  Cache-Control: public, max-age=86400
