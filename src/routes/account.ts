@@ -8,7 +8,7 @@
  * open. A bug here can lock someone out, but it cannot leak a vault.
  */
 
-import { type UserRow, loadUser } from "../accounts";
+import { type UserRow, loadUser, planOf } from "../accounts";
 import * as audit from "../audit";
 import {
   DEFAULT_KDF_ITERATIONS,
@@ -304,8 +304,10 @@ export async function login(env: Env, request: Request, ctx: ExecutionContext): 
   const wantsToken = body["tokenAuth"] === true;
 
   // Free plans are capped on simultaneous devices; the oldest gives way rather
-  // than the newest being refused, which is what people actually expect.
-  await trimSessionsToLimit(env, user);
+  // than the newest being refused, which is what people actually expect. The
+  // count comes back so the arriving device can say so, rather than the old one
+  // just silently stopping working.
+  const evicted = await trimSessionsToLimit(env, user);
 
   await env.DB.prepare(`UPDATE users SET last_login_at = ? WHERE id = ?`).bind(now, user.id).run();
   await audit.record(env, user.id, "login", describeAgent(request));
@@ -327,6 +329,8 @@ export async function login(env: Env, request: Request, ctx: ExecutionContext): 
       emailVerified: user.email_verified === 1,
       plan: user.plan,
       planStatus: user.plan_status,
+      deviceLimit: planOf(user).devices,
+      devicesSignedOut: evicted,
       ...(wantsToken ? { token } : {}),
     },
     wantsToken ? {} : { headers: { "set-cookie": sessionCookie(token, SESSION_MAX_AGE) } },
@@ -809,9 +813,11 @@ async function consumeBackupCode(env: Env, user: UserRow, code: string): Promise
 export async function listSessions(env: Env, session: Session): Promise<Response> {
   const { results } = await env.DB.prepare(
     `SELECT id, created_at, last_seen_at, expires_at, label_enc
-       FROM sessions WHERE user_id = ? AND scope = 'full' ORDER BY last_seen_at DESC`,
+       FROM sessions
+      WHERE user_id = ?1 AND scope = 'full' AND expires_at > ?2 AND absolute_end > ?2
+      ORDER BY last_seen_at DESC`,
   )
-    .bind(session.userId)
+    .bind(session.userId, Date.now())
     .all<{
       id: string;
       created_at: number;

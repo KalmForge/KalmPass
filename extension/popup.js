@@ -87,7 +87,7 @@ $("unlock").addEventListener("submit", async (event) => {
   const code = $("totp").value.trim();
 
   try {
-    await send("unlock", {
+    const outcome = await send("unlock", {
       email: $("email").value,
       password: $("password").value,
       ...(code && !usingBackup ? { totp: code } : {}),
@@ -95,6 +95,13 @@ $("unlock").addEventListener("submit", async (event) => {
     });
     $("password").value = "";
     await start();
+
+    if (outcome?.devicesSignedOut > 0) {
+      const n = outcome.devicesSignedOut;
+      toast(
+        `Signed out ${n} other device${n === 1 ? "" : "s"} (plan covers ${outcome.deviceLimit}).`,
+      );
+    }
   } catch (error) {
     if (error.code === "totp_required" || error.code === "totp_invalid") {
       $("totp-field").hidden = false;

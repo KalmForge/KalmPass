@@ -20,7 +20,9 @@ export interface Plan {
  * add your phone, by which point you already depend on the thing.
  */
 export const PLANS: Record<string, Plan> = {
-  free: { id: "free", name: "Free", items: null, devices: 2, breachCheck: false },
+  // Three, not two: a browser and its extension on one machine already take
+  // two slots, so a two device plan would be spent before the phone arrives.
+  free: { id: "free", name: "Free", items: null, devices: 3, breachCheck: false },
   pro: { id: "pro", name: "Pro", items: null, devices: null, breachCheck: true },
 };
 

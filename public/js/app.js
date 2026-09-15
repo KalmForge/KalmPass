@@ -133,15 +133,23 @@ $("#view-signin").addEventListener("submit", async (event) => {
   submit.textContent = "Unlocking…";
 
   try {
+    let outcome;
     if (resumeMode && !pendingTotp) {
       await store.resume($("#signin-password").value);
     } else {
-      await store.unlock($("#signin-email").value.trim(), $("#signin-password").value, {
+      outcome = await store.unlock($("#signin-email").value.trim(), $("#signin-password").value, {
         ...(code && !useBackup ? { totp: code } : {}),
         ...(code && useBackup ? { backupCode: code } : {}),
       });
     }
     enterVault();
+
+    if (outcome?.devicesSignedOut > 0) {
+      const n = outcome.devicesSignedOut;
+      toast(
+        `Signed out ${n} other device${n === 1 ? "" : "s"}. Your plan covers ${outcome.deviceLimit}.`,
+      );
+    }
   } catch (err) {
     if (err.code === "totp_required" || err.code === "totp_invalid") {
       pendingTotp = true;

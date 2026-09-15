@@ -146,7 +146,11 @@ async function unlock({ email, password, totp, backupCode }) {
 
   await touch();
   await chrome.action.setBadgeText({ text: "" });
-  return { ok: true };
+  return {
+    ok: true,
+    devicesSignedOut: result.devicesSignedOut ?? 0,
+    deviceLimit: result.deviceLimit ?? null,
+  };
 }
 
 async function fetchItems(token, vaultKey) {

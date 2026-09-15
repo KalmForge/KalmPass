@@ -128,25 +128,42 @@ export async function destroyAllSessions(env: Env, userId: string): Promise<void
 }
 
 /**
- * Enforces the plan's device limit by dropping the least recently used sessions.
+ * Enforces the device limit by dropping the least recently used sessions, and
+ * reports how many it dropped.
  *
- * Signing the oldest device out is friendlier than refusing the newest sign-in:
- * someone locked out of the device in their hand cannot reach the setting that
+ * Expired sessions are cleared first and excluded from the count. Without that,
+ * a dead session from this morning still occupies a slot until the nightly
+ * sweep, so somebody on a two device plan gets signed out of their phone by
+ * their own laptop from twelve hours ago. The limit should count devices in
+ * use, not ghosts.
+ *
+ * Signing the oldest out is friendlier than refusing the newest sign-in:
+ * somebody locked out of the device in their hand cannot reach the setting that
  * would fix it.
  */
-export async function trimSessionsToLimit(env: Env, user: UserRow): Promise<void> {
+export async function trimSessionsToLimit(env: Env, user: UserRow): Promise<number> {
   const limit = planOf(user).devices;
-  if (limit === null) return;
+  if (limit === null) return 0;
 
+  const now = Date.now();
   await env.DB.prepare(
+    `DELETE FROM sessions WHERE user_id = ? AND (expires_at <= ?2 OR absolute_end <= ?2)`,
+  )
+    .bind(user.id, now)
+    .run();
+
+  const result = await env.DB.prepare(
     `DELETE FROM sessions
       WHERE user_id = ?1 AND scope = 'full' AND id NOT IN (
-        SELECT id FROM sessions WHERE user_id = ?1 AND scope = 'full'
-        ORDER BY last_seen_at DESC LIMIT ?2
+        SELECT id FROM sessions
+         WHERE user_id = ?1 AND scope = 'full' AND expires_at > ?3 AND absolute_end > ?3
+         ORDER BY last_seen_at DESC LIMIT ?2
       )`,
   )
-    .bind(user.id, limit)
+    .bind(user.id, limit, now)
     .run();
+
+  return result.meta.changes ?? 0;
 }
 
 /** Housekeeping. Expired rows are useless and should not accumulate. */

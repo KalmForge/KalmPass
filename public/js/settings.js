@@ -659,7 +659,7 @@ function planPanel(refresh) {
                 : vault.planPeriodEnd
                   ? `Renews ${new Date(vault.planPeriodEnd).toLocaleDateString()}.`
                   : "Active."
-              : `${vault.itemCount} items, and as many as you like. Two devices, no breach monitoring.`,
+              : `${vault.itemCount} items, and as many as you like. Three devices, no breach monitoring.`,
           ]),
         ]),
       ]),

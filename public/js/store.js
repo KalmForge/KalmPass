@@ -149,6 +149,13 @@ export async function unlock(email, masterPassword, { totp, backupCode } = {}) {
   keys.vault = await unwrapVaultKey(encKey, result.protectedKey);
   adopt(result);
   await load();
+
+  // Reported so the arriving device can say what happened. Being signed out
+  // elsewhere with no explanation is the kind of thing people assume is a bug.
+  return {
+    devicesSignedOut: result.devicesSignedOut ?? 0,
+    deviceLimit: result.deviceLimit ?? null,
+  };
 }
 
 /** Re-opens an existing server session after a reload, given the password again. */
