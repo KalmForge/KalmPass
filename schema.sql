@@ -88,6 +88,12 @@ CREATE TABLE IF NOT EXISTS sessions (
   id            TEXT    PRIMARY KEY,
   user_id       TEXT    NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   scope         TEXT    NOT NULL DEFAULT 'full',  -- full | recovery
+
+  -- HMAC(pepper, device id). The client generates a random id once and keeps it,
+  -- so signing in again on the same machine replaces that machine's session
+  -- rather than consuming another slot against the plan. Hashed like everything
+  -- else, so the table cannot be read as a list of somebody's machines.
+  device_index  TEXT,
   created_at    INTEGER NOT NULL,
   expires_at    INTEGER NOT NULL,
   absolute_end  INTEGER NOT NULL,
@@ -96,6 +102,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions (user_id, expires_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_device ON sessions (user_id, device_index);
 
 -- One-shot links sent by email. Same treatment as sessions: the raw token goes
 -- in the email and only its HMAC is kept here.

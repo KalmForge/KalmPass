@@ -37,6 +37,7 @@ import {
   clearedCookie,
   createSession,
   destroyAllSessions,
+  deviceIndexOf,
   destroyOtherSessions,
   destroySession,
   sessionCookie,
@@ -73,6 +74,17 @@ function requireBlob(body: Record<string, unknown>, field: string, max = 4096): 
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * An opaque random id the client keeps, identifying the browser rather than the
+ * person. Optional: a client with storage blocked simply gets a fresh slot each
+ * time, which is the behaviour this replaces.
+ */
+function optionalDeviceId(body: Record<string, unknown>): string | null {
+  const value = body["deviceId"];
+  if (typeof value !== "string") return null;
+  return /^[A-Za-z0-9_-]{8,64}$/.test(value) ? value : null;
+}
 
 function requireEmail(body: Record<string, unknown>): string {
   const email = requireString(body, "email", { max: 320 });
@@ -226,7 +238,13 @@ export async function signup(env: Env, request: Request, ctx: ExecutionContext):
   const token = await issueToken(env, id, "verify_email", VERIFY_TOKEN_MS);
   ctx.waitUntil(mail.sendVerification(env, email, `${env.APP_URL}/app/?verify=${token}`));
 
-  const { token: sessionToken } = await createSession(env, id, request, "full");
+  const { token: sessionToken } = await createSession(
+    env,
+    id,
+    request,
+    "full",
+    await deviceIndexOf(env, optionalDeviceId(body)),
+  );
   return json(
     { ok: true, email, kdfIterations, totpEnabled: false, emailVerified: false, plan: "free" },
     { status: 201, headers: { "set-cookie": sessionCookie(sessionToken, SESSION_MAX_AGE) } },
@@ -292,7 +310,13 @@ export async function login(env: Env, request: Request, ctx: ExecutionContext): 
   }
 
   await clearFailures(env, keys);
-  const { token } = await createSession(env, user.id, request, "full");
+  const { token } = await createSession(
+    env,
+    user.id,
+    request,
+    "full",
+    await deviceIndexOf(env, optionalDeviceId(body)),
+  );
 
   /**
    * The web app never sees its own session token: it lives in an HttpOnly

@@ -157,6 +157,7 @@ const signup = await call("/account/signup", {
     protectedKey: await encryptBytes(account.encKey, rawVaultKey),
     recoveryWrap: await encryptBytes(recovery.encKey, rawVaultKey),
     recoveryAuthKey: recovery.authKey,
+    deviceId: "smokedeviceAAAA",
   },
 });
 check("signup accepted", signup.status === 201, `status ${signup.status}`);
@@ -168,7 +169,9 @@ if (signup.status !== 201) {
 // The extension's path: a token in the body, and no cookie at all.
 const login = await call("/account/login", {
   method: "POST",
-  body: { email, authKey: account.authKey, tokenAuth: true },
+  // Same device as the signup, so the device checks further down start from a
+  // single session rather than an extra anonymous one.
+  body: { email, authKey: account.authKey, tokenAuth: true, deviceId: "smokedeviceAAAA" },
 });
 const token = login.payload?.token;
 check("login returns a bearer token", Boolean(token));
@@ -221,9 +224,45 @@ check("a request with no credential is refused", noToken.status === 401, `status
 const badToken = await call("/items", { token: "not-a-real-token" });
 check("a forged token is refused", badToken.status === 401, `status ${badToken.status}`);
 
+// --- device identity ---------------------------------------------------------
+
+/**
+ * The device limit is what the paid plan sells, so it gets checked properly.
+ * A known browser should reuse its slot; a new one should take another.
+ */
+const signIn = async (device) =>
+  (await call("/account/login", {
+    method: "POST",
+    body: { email, authKey: account.authKey, tokenAuth: true, deviceId: device },
+  })).payload;
+
+const sessionCount = async (t) =>
+  ((await call("/account/sessions", { token: t })).payload?.sessions ?? []).length;
+
+const first = await signIn("smokedeviceAAAA");
+check("same device as signup reuses its slot", (await sessionCount(first.token)) === 1,
+  `${await sessionCount(first.token)} sessions`);
+
+const again = await signIn("smokedeviceAAAA");
+check("signing in twice on one device stays one session", (await sessionCount(again.token)) === 1,
+  `${await sessionCount(again.token)} sessions`);
+
+const second = await signIn("smokedeviceBBBB");
+check("a second device takes a second slot", (await sessionCount(second.token)) === 2);
+
+const third = await signIn("smokedeviceCCCC");
+check("a third device fits the free plan", (await sessionCount(third.token)) === 3);
+
+const fourth = await signIn("smokedeviceDDDD");
+check("a fourth device evicts the oldest", (await sessionCount(fourth.token)) === 3,
+  `${await sessionCount(fourth.token)} sessions`);
+check("and the arriving device is told", fourth.devicesSignedOut === 1,
+  `reported ${fourth.devicesSignedOut}`);
+check("with the plan limit alongside it", fourth.deviceLimit === 3, `reported ${fourth.deviceLimit}`);
+
 const removed = await call("/account", {
   method: "DELETE",
-  token,
+  token: fourth.token,
   body: { currentAuthKey: account.authKey, confirm: "DELETE" },
 });
 check("account deleted", removed.status === 200, `status ${removed.status}`);

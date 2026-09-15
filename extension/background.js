@@ -72,6 +72,21 @@ const settings = async () => ({
   ...((await chrome.storage.local.get("settings")).settings ?? {}),
 });
 
+/**
+ * A random id for this browser profile, in local storage so it survives a
+ * restart. The extension and the web app count as separate devices, which is
+ * honest: they are separate sign-ins and can be revoked separately.
+ */
+async function deviceId() {
+  const stored = await chrome.storage.local.get("deviceId");
+  if (stored.deviceId) return stored.deviceId;
+  const fresh = toB64(crypto.getRandomValues(new Uint8Array(16)))
+    .replace(/[^A-Za-z0-9]/g, "")
+    .slice(0, 22);
+  await chrome.storage.local.set({ deviceId: fresh });
+  return fresh;
+}
+
 // --- api --------------------------------------------------------------------
 
 async function call(path, { method = "GET", body, token } = {}) {
@@ -125,6 +140,7 @@ async function unlock({ email, password, totp, backupCode }) {
       email: address,
       authKey,
       tokenAuth: true,
+      deviceId: await deviceId(),
       ...(totp ? { totp } : {}),
       ...(backupCode ? { backupCode } : {}),
     },

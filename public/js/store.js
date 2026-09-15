@@ -19,6 +19,8 @@ import {
   generateRecoveryKey,
   generateVaultKey,
   normalizeEmail,
+  randomBytes,
+  toB64,
   unwrapVaultKey,
   wrapVaultKey,
 } from "./crypto.js";
@@ -35,6 +37,27 @@ const CONTENT_FIELDS = [
   "passwordUpdatedAt",
   "history",
 ];
+
+/**
+ * A random id for this browser, kept so that signing in again here replaces
+ * this machine session rather than counting as another device.
+ *
+ * Not a secret and not a credential: it identifies the browser, never the
+ * person, and it is useless without a master password. It joins the two
+ * preference values as the only things KalmPass writes to disk. If storage is
+ * unavailable we do without, and every sign-in counts separately as before.
+ */
+function deviceId() {
+  try {
+    const existing = localStorage.getItem("kalmpass.device");
+    if (existing) return existing;
+    const fresh = toB64(randomBytes(16)).replace(/[^A-Za-z0-9]/g, "").slice(0, 22);
+    localStorage.setItem("kalmpass.device", fresh);
+    return fresh;
+  } catch {
+    return null;
+  }
+}
 
 const listeners = new Set();
 
@@ -114,6 +137,7 @@ export async function signup(email, masterPassword, setupCode) {
     protectedKey: await wrapVaultKey(account.encKey, vaultKey),
     recoveryWrap: await wrapVaultKey(recovery.encKey, vaultKey),
     recoveryAuthKey: recovery.authKey,
+    deviceId: deviceId(),
     ...(setupCode ? { setupCode } : {}),
   });
 
@@ -141,6 +165,7 @@ export async function unlock(email, masterPassword, { totp, backupCode } = {}) {
   const result = await api.login({
     email: address,
     authKey,
+    deviceId: deviceId(),
     ...(totp ? { totp } : {}),
     ...(backupCode ? { backupCode } : {}),
   });

@@ -32,11 +32,24 @@ export interface Session {
 
 const tokenId = (env: Env, token: string) => pepper(env, `session:${token}`);
 
+/**
+ * Turns a client-supplied device id into a stored blind index.
+ *
+ * The id is not a secret and not a credential; it exists so the same browser
+ * can be recognised across sign-ins. It is hashed anyway, because a plain list
+ * of device ids per account is a correlation risk for no benefit.
+ */
+export async function deviceIndexOf(env: Env, deviceId: string | null): Promise<string | null> {
+  if (!deviceId) return null;
+  return pepper(env, `device:${deviceId}`);
+}
+
 export async function createSession(
   env: Env,
   userId: string,
   request: Request,
   scope: SessionScope = "full",
+  deviceIndex: string | null = null,
 ): Promise<{ token: string; expiresAt: number }> {
   const token = randomToken();
   const id = await tokenId(env, token);
@@ -52,12 +65,34 @@ export async function createSession(
     `session.label:${id}`,
   );
 
+  // A known device replaces its own session instead of adding one. Without
+  // this, moving between a work machine and a home machine in the same day
+  // burns a slot each time and trips a limit the person has not actually
+  // exceeded.
+  if (deviceIndex && scope === "full") {
+    await env.DB.prepare(
+      `DELETE FROM sessions WHERE user_id = ? AND device_index = ? AND scope = 'full'`,
+    )
+      .bind(userId, deviceIndex)
+      .run();
+  }
+
   await env.DB.prepare(
-    `INSERT INTO sessions (id, user_id, scope, created_at, expires_at, absolute_end,
-                           last_seen_at, label_enc)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO sessions (id, user_id, scope, device_index, created_at, expires_at,
+                           absolute_end, last_seen_at, label_enc)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
-    .bind(id, userId, scope, now, expiresAt, now + (scope === "recovery" ? idle : ABSOLUTE_MS), now, label)
+    .bind(
+      id,
+      userId,
+      scope,
+      deviceIndex,
+      now,
+      expiresAt,
+      now + (scope === "recovery" ? idle : ABSOLUTE_MS),
+      now,
+      label,
+    )
     .run();
 
   return { token, expiresAt };
