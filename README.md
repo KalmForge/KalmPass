@@ -140,11 +140,11 @@ Non-secret settings (`APP_URL`, `MAIL_FROM`, `ALLOW_SIGNUP`) live in
 
 ## Launch checklist
 
-- [ ] **Email sending.** Run `npx wrangler email sending enable kalmpass.net`.
-      This currently returns `Unauthorized` until Email Sending is enabled for the
-      account in the Cloudflare dashboard. Until it is, confirmation and security
-      emails are logged rather than delivered, and accounts stay usable for a
-      seven-day grace period before going read-only.
+- [x] **Email sending.** Done. kalmpass.net is onboarded, and Cloudflare wrote
+      the SPF, DKIM, DMARC and bounce MX records itself. Note that Email Sending
+      needs the Workers Paid plan; on the free plan the dashboard offers no way
+      to onboard a domain and the API answers Unauthorized, which reads as a
+      permissions problem but is a billing one.
 - [ ] **Stripe.** Create a Pro price, then set the three `STRIPE_*` secrets and
       point a webhook at `https://kalmpass.net/api/billing/webhook` for
       `checkout.session.completed`, `customer.subscription.*` and
