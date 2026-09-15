@@ -1,6 +1,7 @@
 User-agent: *
 Disallow: /app/
 Disallow: /api/
+Disallow: /admin/
 Allow: /
 
 Sitemap: https://kalmpass.net/sitemap.xml

@@ -16,6 +16,7 @@
 import { prune as pruneAudit } from "./audit";
 import { HttpError, errorResponse, json, unauthorized } from "./http";
 import * as account from "./routes/account";
+import * as admin from "./routes/admin";
 import * as billing from "./routes/billing";
 import * as items from "./routes/items";
 import * as tools from "./routes/tools";
@@ -108,6 +109,8 @@ async function route(
     if (method === "DELETE") return account.revokeOtherSessions(env, session);
   }
   if (path === "/api/account/activity" && method === "GET") return account.activity(env, session);
+
+  if (path === "/api/admin/overview" && method === "GET") return admin.overview(env, session);
 
   if (path === "/api/billing/checkout" && method === "POST") {
     return billing.checkout(env, request, session);

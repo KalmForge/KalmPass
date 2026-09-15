@@ -20,6 +20,12 @@ declare global {
     /** Optional invite code gating registration while in private beta. */
     SIGNUP_TOKEN?: string;
 
+    /** Whoever signs in as this address gets the admin dashboard. */
+    ADMIN_EMAIL?: string;
+    /** Display only, for the revenue figure on that dashboard. */
+    PRO_PRICE?: string;
+    PRO_CURRENCY?: string;
+
     STRIPE_SECRET_KEY?: string;
     STRIPE_WEBHOOK_SECRET?: string;
     STRIPE_PRICE_ID?: string;

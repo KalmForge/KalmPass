@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "types": "wrangler types",
     "tail": "wrangler tail",
-    "lint:copy": "node scripts/check-punctuation.mjs"
+    "lint:copy": "node scripts/check-punctuation.mjs",
+    "stripe:secrets": "node scripts/set-stripe-secrets.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

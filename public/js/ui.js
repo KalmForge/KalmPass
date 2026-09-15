@@ -9,8 +9,7 @@ export function toast(message, kind = "ok") {
   const node = el("div", { class: "toast", dataset: { kind }, text: message });
   toasts().append(node);
   setTimeout(() => {
-    node.style.opacity = "0";
-    node.style.transition = "opacity .2s";
+    node.classList.add("is-leaving");
     setTimeout(() => node.remove(), 220);
   }, kind === "bad" ? 4200 : 2400);
 }
@@ -62,10 +61,10 @@ let onClose = null;
  * Opens the single <dialog>. `render` receives a close function and returns the
  * body content plus optional footer buttons.
  */
-export function openModal({ title, render, width }) {
+export function openModal({ title, render, wide }) {
   const node = dialog();
   clear(node);
-  if (width) node.style.width = width;
+  node.classList.toggle("is-wide", Boolean(wide));
 
   let settle;
   const result = new Promise((resolve) => {
@@ -116,7 +115,7 @@ export function confirmDialog({ title, message, confirmLabel = "Confirm", danger
   return openModal({
     title,
     render: (close) => ({
-      body: [el("p", { class: "muted", text: message, style: "margin:0" })],
+      body: [el("p", { class: "muted m0", text: message })],
       footer: [
         el("button", { class: "ghost", type: "button", text: "Cancel", onClick: () => close(false) }),
         el("button", {
@@ -162,7 +161,7 @@ export function askMasterPassword({ title, message, confirmLabel = "Continue" })
 
       return {
         body: [
-          message ? el("p", { class: "muted", text: message, style: "margin:0" }) : null,
+          message ? el("p", { class: "muted m0", text: message }) : null,
           el("label", { class: "field" }, [el("span", { text: "Master password" }), input]),
           error,
         ],
@@ -187,17 +186,16 @@ export function avatarFor(name) {
   const text = (name || "?").trim();
   let hash = 0;
   for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
-  const hue = hash % 360;
+  const hue = hash % 12;
   const initials = text
     .split(/[\s._-]+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0])
     .join("");
-  return {
-    initials: initials || "?",
-    background: `linear-gradient(140deg, hsl(${hue} 62% 52%), hsl(${(hue + 40) % 360} 62% 44%))`,
-  };
+  // An index into the fixed set of gradients in app.css. A generated colour
+  // would have to travel as an inline style, which the CSP forbids.
+  return { initials: initials || "?", hue: String(hue) };
 }
 
 /** Wraps an async handler so a thrown error becomes a toast, not a dead button. */

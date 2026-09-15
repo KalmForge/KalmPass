@@ -1,0 +1,188 @@
+/* Admin dashboard. Extends site.css rather than restating it. */
+
+.admin-head {
+  padding: 40px 0 28px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.admin-head h1 {
+  font-size: 34px;
+}
+.admin-head .faint {
+  margin-left: auto;
+}
+
+/* --- stat tiles ---------------------------------------------------------- */
+
+/* Borders on the cells rather than a gap over a coloured backdrop. With
+   auto-fit columns the last row is usually short, and the backdrop showed
+   through as an empty grey block where no tile existed. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+  margin-bottom: 44px;
+}
+.tile {
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 18px 20px;
+}
+.tile dt {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.tile dd {
+  margin: 6px 0 0;
+  font-family: var(--serif);
+  font-size: 30px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.tile dd small {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  margin-left: 6px;
+}
+/* Reserved status colour, always paired with its label so it never reads by
+   colour alone. */
+.tile[data-state="attention"] dd {
+  color: #b3261e;
+}
+
+/* --- chart --------------------------------------------------------------- */
+
+.panel {
+  margin-bottom: 44px;
+}
+.panel h2 {
+  font-size: 21px;
+}
+.panel .sub {
+  margin-top: 6px;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.chart {
+  margin-top: 22px;
+  position: relative;
+}
+.chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.bar {
+  fill: var(--blue);
+}
+/* The hit target is wider than the bar, so thin bars are still reachable. */
+.hit {
+  fill: transparent;
+  cursor: default;
+}
+.hit:hover + .bar,
+.bar.is-active {
+  fill: #12448f;
+}
+.grid-line {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+.axis-label {
+  font-family: var(--sans);
+  font-size: 11px;
+  fill: var(--ink-faint);
+}
+
+.tip {
+  pointer-events: none;
+}
+.tip-box {
+  fill: var(--ink);
+}
+.tip-text {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  fill: #fff;
+}
+
+/* --- table --------------------------------------------------------------- */
+
+.table-scroll {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+table.accounts {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+}
+table.accounts th,
+table.accounts td {
+  text-align: left;
+  padding: 10px 14px 10px 0;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+table.accounts th {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom-color: var(--rule-strong);
+}
+table.accounts td {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+table.accounts td.email {
+  color: var(--ink);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 15em;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-soft);
+}
+.badge[data-plan="pro"] {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.badge[data-warn="true"] {
+  border-color: #b3261e;
+  color: #b3261e;
+}
+
+.note-line {
+  margin-top: 16px;
+  color: var(--ink-faint);
+  font-size: 13.5px;
+}
+
+@media (max-width: 720px) {
+  .admin-head {
+    padding-top: 26px;
+  }
+  .admin-head .faint {
+    margin-left: 0;
+  }
+}
+
+.mt-22 { margin-top: 22px; }

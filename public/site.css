@@ -487,3 +487,14 @@ a {
     padding-top: 0;
   }
 }
+
+.mt-14 { margin-top: 14px; }
+
+.notfound {
+  min-height: 70vh;
+  align-content: center;
+  justify-items: start;
+}
+.notfound-mark {
+  border-radius: 16px;
+}

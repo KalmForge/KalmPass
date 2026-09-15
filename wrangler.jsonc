@@ -33,7 +33,9 @@
     "APP_URL": "https://kalmpass.net",
     "MAIL_FROM": "no-reply@kalmpass.net",
     "MAIL_FROM_NAME": "KalmPass",
-    "ALLOW_SIGNUP": "true"
+    "ALLOW_SIGNUP": "true",
+    "PRO_PRICE": "2",
+    "PRO_CURRENCY": "GBP"
   },
 
   // Nightly housekeeping: expired sessions, spent tokens, stale trash, old audit.

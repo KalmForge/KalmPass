@@ -67,7 +67,7 @@ const TABS = [
 export function openSettings(initialTab = "security") {
   return openModal({
     title: "Settings",
-    width: "min(660px, calc(100vw - 32px))",
+    wide: true,
     render: (close) => {
       const panel = el("div", { class: "stack" });
 
@@ -80,7 +80,7 @@ export function openSettings(initialTab = "security") {
 
       const tabs = el(
         "div",
-        { class: "tabs", style: "margin:0 0 4px" },
+        { class: "tabs mb-4" },
         TABS.map(([id, label]) =>
           el("button", {
             class: "tab",
@@ -101,7 +101,7 @@ export function openSettings(initialTab = "security") {
 const section = (title, children, description) =>
   el("div", { class: "finding" }, [
     el("h3", { text: title }),
-    description ? el("p", { class: "faint", style: "margin:0", text: description }) : null,
+    description ? el("p", { class: "faint m0", text: description }) : null,
     ...children,
   ]);
 
@@ -114,12 +114,10 @@ const goToItem = (item) => {
 
 const itemLink = (item) =>
   el("button", {
-    class: "link",
+    class: "link link-left",
     type: "button",
-    style: "justify-self:start;text-align:left",
     text: item.name || "Untitled",
-    onClick: () => goToItem(item),
-  });
+    onClick: () => goToItem(item) });
 
 // ---------------------------------------------------------------------------
 
@@ -128,7 +126,7 @@ const PANELS = {
     section(
       "Email address",
       [
-        el("p", { class: "faint", style: "margin:0" }, [
+        el("p", { class: "faint m0" }, [
           vault.email + (vault.emailVerified ? "" : " (not yet confirmed)"),
         ]),
         el("button", {
@@ -201,7 +199,7 @@ const PANELS = {
     section(
       "Your Recovery Key",
       [
-        el("p", { class: "faint", style: "margin:0" }, [
+        el("p", { class: "faint m0" }, [
           vault.recoveryCreatedAt
             ? `Issued ${relativeTime(vault.recoveryCreatedAt)}.`
             : "Issued when you created your account.",
@@ -217,7 +215,7 @@ const PANELS = {
     ),
 
     section("How recovery works", [
-      el("ul", { style: "margin:0;padding-left:18px;font-size:13.5px;line-height:1.7" }, [
+      el("ul", { class: "bullets" }, [
         el("li", { text: "Your vault key is wrapped twice: once by your master password, once by your Recovery Key." }),
         el("li", { text: "Either one opens the vault. We hold neither, so we cannot open it and neither can anyone who breaches us." }),
         el("li", { text: "Using the Recovery Key issues a fresh one, because the old one has been typed into a browser." }),
@@ -245,7 +243,7 @@ const PANELS = {
     section(
       "Restore or import",
       [
-        el("div", { style: "display:flex;gap:8px;flex-wrap:wrap" }, [
+        el("div", { class: "row-wrap" }, [
           el("button", {
             class: "ghost",
             type: "button",
@@ -268,7 +266,7 @@ const PANELS = {
 
   about: () => [
     section("Account", [
-      el("p", { class: "faint", style: "margin:0" }, [
+      el("p", { class: "faint m0" }, [
         `${vault.email} · ${vault.itemCount} items · ${vault.kdfIterations.toLocaleString()} KDF rounds` +
           `${vault.emailVerified ? "" : " · email not yet confirmed"}`,
       ]),
@@ -286,7 +284,7 @@ const PANELS = {
     ]),
 
     section("How your vault is protected", [
-      el("ul", { style: "margin:0;padding-left:18px;font-size:13.5px;line-height:1.7" }, [
+      el("ul", { class: "bullets" }, [
         el("li", { text: "Items are encrypted with AES-256-GCM in this browser, before anything is sent." }),
         el("li", { text: "The key comes from your master password via one million rounds of PBKDF2-SHA256." }),
         el("li", { text: "Your master password is never transmitted, and the server holds no key that can decrypt an item." }),
@@ -314,18 +312,15 @@ const PANELS = {
 function numberRow(label, value, suffix, onChange, { min, max }) {
   return el("div", { class: "opt" }, [
     el("span", { text: label }),
-    el("input", {
-      type: "number",
+    el("input", { class: "num-input", type: "number",
       value,
       min,
       max,
-      style: "width:84px",
       onChange: (event) => {
         const next = Math.max(min, Math.min(max, Number(event.target.value) || min));
         event.target.value = next;
         onChange(next);
-      },
-    }),
+      } }),
     el("span", { class: "faint", text: suffix }),
   ]);
 }
@@ -435,14 +430,12 @@ function changeEmailDialog(refresh) {
             el("strong", { text: "Two things will change with it." }),
             "You will be given a new Recovery Key, because your current one is tied to your old address and will stop working. Your other devices will be signed out, since they hold keys derived from the old address.",
           ]),
-          el("p", { class: "faint", style: "margin:0" }, [`Currently ${vault.email}.`]),
+          el("p", { class: "faint m0" }, [`Currently ${vault.email}.`]),
           el("label", { class: "field" }, [el("span", { text: "New email address" }), address]),
           el("label", { class: "field" }, [el("span", { text: "Master password" }), password]),
           el("p", {
-            class: "faint",
-            style: "margin:0",
-            text: "Your master password stays the same. You will sign in with it and the new address.",
-          }),
+            class: "faint m0",
+            text: "Your master password stays the same. You will sign in with it and the new address." }),
           error,
         ],
         footer: [
@@ -489,7 +482,7 @@ function showRecoveryKey(recoveryKey) {
           "Save it somewhere safe and offline. Your previous Recovery Key no longer works.",
         ]),
         el("div", { class: "readout kit-key", text: recoveryKey }),
-        el("div", { style: "display:flex;gap:8px;flex-wrap:wrap" }, [
+        el("div", { class: "row-wrap" }, [
           el("button", {
             class: "mini",
             type: "button",
@@ -566,11 +559,11 @@ async function enableTotp(refresh) {
 
       return {
         body: [
-          el("p", { class: "muted", style: "margin:0" }, [
+          el("p", { class: "muted m0" }, [
             "Add this key to your authenticator app, then enter the code it shows to confirm.",
           ]),
-          el("div", { class: "readout", style: "letter-spacing:.08em", text: grouped }),
-          el("div", { style: "display:flex;gap:8px;flex-wrap:wrap" }, [
+          el("div", { class: "readout tracked", text: grouped }),
+          el("div", { class: "row-wrap" }, [
             el("button", {
               class: "mini",
               type: "button",
@@ -578,11 +571,9 @@ async function enableTotp(refresh) {
               onClick: () => copy(enrolment.secret, "Setup key copied"),
             }),
             el("a", {
-              class: "mini",
+              class: "mini plain-link",
               href: enrolment.uri,
-              text: "Open in authenticator app",
-              style: "text-decoration:none;display:inline-block",
-            }),
+              text: "Open in authenticator app" }),
           ]),
           el("label", { class: "field" }, [el("span", { text: "Code from your app" }), code]),
           error,
@@ -606,7 +597,7 @@ function showBackupCodes(codes) {
           "Each one signs you in once if you lose your authenticator. They are not a substitute for your Recovery Key. Keep both.",
         ]),
         el("div", { class: "codes" }, codes.map((code) => el("span", { text: code }))),
-        el("div", { style: "display:flex;gap:8px" }, [
+        el("div", { class: "row" }, [
           el("button", {
             class: "mini",
             type: "button",
@@ -661,7 +652,7 @@ function planPanel(refresh) {
         el("div", { class: "plan-mark", dataset: { plan: vault.plan }, text: pro ? "Pro" : "Free" }),
         el("div", {}, [
           el("h3", { text: pro ? "You are on Pro" : "You are on the Free plan" }),
-          el("p", { class: "faint", style: "margin:0" }, [
+          el("p", { class: "faint m0" }, [
             pro
               ? status === "past_due"
                 ? "Your last payment failed. Update your card to keep Pro."
@@ -697,7 +688,7 @@ function planPanel(refresh) {
       section(
         "Upgrade to Pro",
         [
-          el("ul", { style: "margin:0;padding-left:18px;font-size:13.5px;line-height:1.7" }, [
+          el("ul", { class: "bullets" }, [
             el("li", { text: "Unlimited items" }),
             el("li", { text: "Unlimited devices" }),
             el("li", { text: "Breach monitoring against Have I Been Pwned" }),
@@ -745,11 +736,11 @@ function healthPanel() {
         el("div", {
           class: "health-num",
           text: String(report.score),
-          style: `color:${report.score >= 80 ? "var(--good)" : report.score >= 50 ? "var(--warn)" : "var(--bad)"}`,
+          dataset: { state: report.score >= 80 ? "good" : report.score >= 50 ? "warn" : "bad" },
         }),
         el("div", {}, [
           el("h3", { text: report.score >= 80 ? "Your vault is in good shape" : "A few things to fix" }),
-          el("p", { class: "faint", style: "margin:0", text: `${report.total} items with passwords.` }),
+          el("p", { class: "faint m0", text: `${report.total} items with passwords.` }),
         ]),
       ]),
     ]),
@@ -774,7 +765,7 @@ function healthPanel() {
     container.append(
       el("div", { class: "finding" }, [
         el("h3", {}, ["Reused passwords", el("span", { class: "pill", text: String(report.reused.length) })]),
-        el("p", { class: "faint", style: "margin:0" }, [
+        el("p", { class: "faint m0" }, [
           "One breach at any of these sites exposes the others.",
         ]),
         el(
@@ -818,10 +809,8 @@ function healthPanel() {
         results.replaceChildren(
           found.length === 0
             ? el("p", {
-                class: "faint",
-                style: "margin:0",
-                text: "None of your passwords appear in a known breach.",
-              })
+                class: "faint m0",
+                text: "None of your passwords appear in a known breach." })
             : el(
                 "ul",
                 {},
@@ -832,7 +821,7 @@ function healthPanel() {
         );
       } catch (error) {
         results.replaceChildren(
-          el("p", { class: "faint", style: "margin:0" }, [
+          el("p", { class: "faint m0" }, [
             error.code === "upgrade_required"
               ? "Breach monitoring is part of Pro. "
               : `${error.message} `,
@@ -940,7 +929,7 @@ const ACTIVITY_LABELS = {
 function activityPanel() {
   const container = el("div", { class: "finding" }, [
     el("h3", { text: "Recent activity" }),
-    el("p", { class: "faint", style: "margin:0", text: "Loading…" }),
+    el("p", { class: "faint m0", text: "Loading…" }),
   ]);
 
   api
@@ -949,7 +938,7 @@ function activityPanel() {
       container.replaceChildren(
         el("h3", { text: "Recent activity" }),
         events.length === 0
-          ? el("p", { class: "faint", style: "margin:0", text: "Nothing yet." })
+          ? el("p", { class: "faint m0", text: "Nothing yet." })
           : el(
               "ul",
               {},
@@ -966,7 +955,7 @@ function activityPanel() {
     .catch(() => {
       container.replaceChildren(
         el("h3", { text: "Recent activity" }),
-        el("p", { class: "faint", style: "margin:0", text: "Could not load activity." }),
+        el("p", { class: "faint m0", text: "Could not load activity." }),
       );
     });
 
@@ -1042,7 +1031,7 @@ function exportBackup() {
 
       return {
         body: [
-          el("p", { class: "muted", style: "margin:0" }, [
+          el("p", { class: "muted m0" }, [
             "The file is encrypted with this passphrase, not your master password, so it stays readable even if you lose your account. Store it separately.",
           ]),
           el("label", { class: "field" }, [el("span", { text: "Backup passphrase" }), passphrase]),
@@ -1111,10 +1100,8 @@ function importBackup() {
           el("label", { class: "field" }, [el("span", { text: "Backup file" }), file]),
           el("label", { class: "field" }, [el("span", { text: "Backup passphrase" }), passphrase]),
           el("p", {
-            class: "faint",
-            style: "margin:0",
-            text: "Items are added to your vault; nothing existing is replaced.",
-          }),
+            class: "faint m0",
+            text: "Items are added to your vault; nothing existing is replaced." }),
           error,
         ],
         footer: [

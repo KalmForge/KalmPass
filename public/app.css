@@ -610,14 +610,6 @@ button:disabled {
   letter-spacing: 0.12em;
   font-variant-numeric: tabular-nums;
 }
-.totp-ring {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  flex: none;
-  background: conic-gradient(var(--accent) var(--progress, 0deg), var(--line) 0);
-  mask: radial-gradient(circle 8px at 50% 50%, transparent 98%, #000 100%);
-}
 
 .detail-actions {
   display: flex;
@@ -990,4 +982,114 @@ input[type="range"] {
   .warn {
     border: 1px solid #000;
   }
+}
+
+/* --- utilities ----------------------------------------------------------- */
+
+/* The Content-Security-Policy forbids inline styles, deliberately: a style
+   attribute is a real exfiltration channel and a password manager should not
+   permit one. These stand in for the handful of one-off rules the UI needs. */
+
+.m0 { margin: 0; }
+.mt-2 { margin: 2px 0 0; }
+.mt-4 { margin-top: 4px; }
+.mt-14 { margin-top: 14px; }
+.mt-18 { margin-top: 18px; }
+.mt-22 { margin-top: 22px; }
+.mb-4 { margin: 0 0 4px; }
+.mb-16 { margin: 0 0 16px; }
+.mb-18 { margin-bottom: 18px; }
+
+.row { display: flex; gap: 8px; }
+.row-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+.row-top { display: flex; gap: 6px; align-items: flex-start; }
+.row-mid { display: flex; align-items: center; gap: 12px; }
+.grow { flex: 1; }
+
+.bullets {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+.num-input { width: 84px; }
+.plain-link { text-decoration: none; display: inline-block; }
+.tracked { letter-spacing: 0.08em; }
+.link-left { justify-self: start; text-align: left; }
+.summary-toggle { cursor: pointer; margin-bottom: 10px; }
+
+/* --- computed colours, as fixed classes ---------------------------------- */
+
+/* Each item gets a stable hue from a hash of its name. Twelve steps around the
+   wheel is enough to make a list scannable, and picking from a fixed set keeps
+   it inside the CSP where a generated gradient could not go. */
+.avatar[data-hue="0"]  { background: linear-gradient(140deg, hsl(210 62% 52%), hsl(250 62% 44%)); }
+.avatar[data-hue="1"]  { background: linear-gradient(140deg, hsl(240 58% 56%), hsl(280 58% 46%)); }
+.avatar[data-hue="2"]  { background: linear-gradient(140deg, hsl(270 55% 55%), hsl(310 55% 45%)); }
+.avatar[data-hue="3"]  { background: linear-gradient(140deg, hsl(300 52% 52%), hsl(340 56% 46%)); }
+.avatar[data-hue="4"]  { background: linear-gradient(140deg, hsl(340 58% 52%), hsl(15 60% 46%)); }
+.avatar[data-hue="5"]  { background: linear-gradient(140deg, hsl(10 60% 52%), hsl(40 62% 44%)); }
+.avatar[data-hue="6"]  { background: linear-gradient(140deg, hsl(35 62% 48%), hsl(70 52% 38%)); }
+.avatar[data-hue="7"]  { background: linear-gradient(140deg, hsl(80 48% 42%), hsl(120 44% 36%)); }
+.avatar[data-hue="8"]  { background: linear-gradient(140deg, hsl(140 48% 40%), hsl(170 52% 34%)); }
+.avatar[data-hue="9"]  { background: linear-gradient(140deg, hsl(165 52% 38%), hsl(195 58% 38%)); }
+.avatar[data-hue="10"] { background: linear-gradient(140deg, hsl(185 56% 42%), hsl(215 60% 44%)); }
+.avatar[data-hue="11"] { background: linear-gradient(140deg, hsl(200 60% 46%), hsl(235 60% 46%)); }
+
+.health-num[data-state="good"] { color: var(--good); }
+.health-num[data-state="warn"] { color: var(--warn); }
+.health-num[data-state="bad"] { color: var(--bad); }
+
+.side-dot[data-tone="bad"] { color: var(--bad); }
+.side-dot[data-tone="warn"] { color: var(--warn); }
+
+/* Toasts fade by class, since a style attribute would be blocked. */
+.toast.is-leaving {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.modal.is-wide {
+  width: min(660px, calc(100vw - 32px));
+}
+
+/* The meter fills in twenty steps. Indistinguishable from a continuous width,
+   and it does not need an inline style to set it. */
+.meter-bar > span[data-fill="0"] { width: 0%; }
+.meter-bar > span[data-fill="1"] { width: 5%; }
+.meter-bar > span[data-fill="2"] { width: 10%; }
+.meter-bar > span[data-fill="3"] { width: 15%; }
+.meter-bar > span[data-fill="4"] { width: 20%; }
+.meter-bar > span[data-fill="5"] { width: 25%; }
+.meter-bar > span[data-fill="6"] { width: 30%; }
+.meter-bar > span[data-fill="7"] { width: 35%; }
+.meter-bar > span[data-fill="8"] { width: 40%; }
+.meter-bar > span[data-fill="9"] { width: 45%; }
+.meter-bar > span[data-fill="10"] { width: 50%; }
+.meter-bar > span[data-fill="11"] { width: 55%; }
+.meter-bar > span[data-fill="12"] { width: 60%; }
+.meter-bar > span[data-fill="13"] { width: 65%; }
+.meter-bar > span[data-fill="14"] { width: 70%; }
+.meter-bar > span[data-fill="15"] { width: 75%; }
+.meter-bar > span[data-fill="16"] { width: 80%; }
+.meter-bar > span[data-fill="17"] { width: 85%; }
+.meter-bar > span[data-fill="18"] { width: 90%; }
+.meter-bar > span[data-fill="19"] { width: 95%; }
+.meter-bar > span[data-fill="20"] { width: 100%; }
+
+.totp-ring {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: block;
+}
+.totp-ring circle {
+  fill: none;
+  stroke-width: 3;
+}
+.totp-ring .track { stroke: var(--line); }
+.totp-ring .sweep {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s linear;
 }

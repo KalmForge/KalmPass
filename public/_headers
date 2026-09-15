@@ -13,6 +13,9 @@
 /app/*
   X-Robots-Tag: noindex, nofollow
 
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+
 # Public marketing assets hold nothing sensitive, so they may be cached briefly.
 /site.css
   Cache-Control: public, max-age=3600

@@ -83,7 +83,7 @@ function sideButton(id, label, count, extra = {}) {
       },
     },
     [
-      extra.dot ? el("span", { class: "side-dot", style: `color:${extra.dot}` }) : null,
+      extra.tone ? el("span", { class: "side-dot", dataset: { tone: extra.tone } }) : null,
       el("span", { text: label }),
       count === null ? null : el("span", { class: "side-count", text: String(count) }),
     ],
@@ -103,8 +103,8 @@ function renderSidebar(flags) {
   const reused = live.filter((i) => flags.isReused(i)).length;
   if (weak || reused) {
     nav.append(el("div", { class: "side-label", text: "Needs attention" }));
-    if (weak) nav.append(sideButton("weak", "Weak", weak, { dot: "var(--bad)" }));
-    if (reused) nav.append(sideButton("reused", "Reused", reused, { dot: "var(--warn)" }));
+    if (weak) nav.append(sideButton("weak", "Weak", weak, { tone: "bad" }));
+    if (reused) nav.append(sideButton("reused", "Reused", reused, { tone: "warn" }));
   }
 
   const folders = foldersOf(vault.items);
@@ -157,7 +157,7 @@ function renderList(items, flags) {
         [
           el("span", {
             class: "avatar",
-            style: `background:${avatar.background}`,
+            dataset: { hue: avatar.hue },
             text: avatar.initials,
           }),
           el("span", { class: "row-main" }, [
@@ -241,12 +241,12 @@ function renderDetail(flags) {
       }),
       el("span", {
         class: "avatar",
-        style: `background:${avatar.background}`,
+        dataset: { hue: avatar.hue },
         text: avatar.initials,
       }),
       el("div", { class: "detail-title" }, [
         el("h2", { text: item.name || "Untitled" }),
-        el("p", { class: "faint", style: "margin:2px 0 0", text: folderLine(item) }),
+        el("p", { class: "faint mt-2", text: folderLine(item) }),
       ]),
       item.deletedAt
         ? null
@@ -301,7 +301,7 @@ function renderDetail(flags) {
   if (item.history?.length) panel.append(historyBlock(item));
 
   panel.append(
-    el("p", { class: "faint", style: "margin:0 0 16px" }, [
+    el("p", { class: "faint mb-16" }, [
       `Updated ${relativeTime(item.updatedAt)}`,
       item.passwordUpdatedAt ? ` · password changed ${relativeTime(item.passwordUpdatedAt)}` : "",
     ]),
@@ -319,7 +319,7 @@ function passwordEntry(item, flags) {
   let revealed = false;
 
   const value = el("div", { class: "entry-value secret", text: "•".repeat(12) });
-  const meta = el("div", { class: "faint", style: "margin-top:4px" }, [
+  const meta = el("div", { class: "faint mt-4" }, [
     `${strength.label} · ${strength.bits} bits · ${crackTime(strength.bits)} to crack`,
   ]);
 
@@ -338,6 +338,49 @@ function passwordEntry(item, flags) {
  * A live authenticator code, recomputed every second along with the ring that
  * shows how long it has left.
  */
+const SVG_NS = "http://www.w3.org/2000/svg";
+const RING_RADIUS = 9;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+
+/**
+ * The countdown ring.
+ *
+ * Drawn as SVG because its progress changes every second and an inline style is
+ * not available to us. stroke-dashoffset is a presentation attribute, so the
+ * Content-Security-Policy has no objection to it.
+ */
+function totpRing() {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("class", "totp-ring");
+  svg.setAttribute("viewBox", "0 0 26 26");
+  svg.setAttribute("aria-hidden", "true");
+
+  const circle = (className) => {
+    const node = document.createElementNS(SVG_NS, "circle");
+    node.setAttribute("class", className);
+    node.setAttribute("cx", "13");
+    node.setAttribute("cy", "13");
+    node.setAttribute("r", String(RING_RADIUS));
+    return node;
+  };
+
+  const track = circle("track");
+  const sweep = circle("sweep");
+  sweep.setAttribute("stroke-dasharray", String(RING_LENGTH));
+  sweep.setAttribute("stroke-dashoffset", "0");
+  // Start the sweep at twelve o clock rather than three.
+  sweep.setAttribute("transform", "rotate(-90 13 13)");
+
+  svg.append(track, sweep);
+
+  return {
+    svg,
+    setRemaining(fraction) {
+      sweep.setAttribute("stroke-dashoffset", String(RING_LENGTH * (1 - fraction)));
+    },
+  };
+}
+
 function totpEntry(item) {
   const config = validateTotp(item.totp);
   if (!config.ok || !config.config) {
@@ -345,7 +388,7 @@ function totpEntry(item) {
   }
 
   const code = el("div", { class: "totp-code", text: "······" });
-  const ring = el("span", { class: "totp-ring" });
+  const ring = totpRing();
   const period = config.config.period || 30;
 
   const tick = async () => {
@@ -353,7 +396,7 @@ function totpEntry(item) {
       const next = await totpCode(config.config);
       code.textContent = `${next.slice(0, 3)} ${next.slice(3)}`;
       const left = secondsRemaining(period);
-      ring.style.setProperty("--progress", `${(left / period) * 360}deg`);
+      ring.setRemaining(left / period);
     } catch {
       code.textContent = "error";
     }
@@ -364,7 +407,7 @@ function totpEntry(item) {
   return entry("Authenticator code", "", [
     miniButton("Copy", async () => copy(code.textContent.replace(/\s/g, ""), "Code copied")),
   ], {
-    node: el("div", { style: "display:flex;align-items:center;gap:12px" }, [ring, code]),
+    node: el("div", { class: "row-mid" }, [ring.svg, code]),
   });
 }
 
@@ -377,8 +420,8 @@ function historyBlock(item) {
       ], { secret: true }),
     );
   }
-  return el("details", { style: "margin-bottom:18px" }, [
-    el("summary", { class: "muted", style: "cursor:pointer;margin-bottom:10px" }, [
+  return el("details", { class: "mb-18" }, [
+    el("summary", { class: "muted summary-toggle" }, [
       `Previous passwords (${item.history.length})`,
     ]),
     list,
@@ -544,8 +587,8 @@ export function openEditor(existing) {
           el("div", { class: "grid-2" }, [field("Username", username), field("Website", url)]),
           el("label", { class: "field" }, [
             el("span", { text: "Password" }),
-            el("div", { style: "display:flex;gap:6px;align-items:start" }, [
-              el("div", { style: "flex:1" }, [password]),
+            el("div", { class: "row-top" }, [
+              el("div", { class: "grow" }, [password]),
               reveal,
               fill,
             ]),
@@ -576,7 +619,8 @@ export function openEditor(existing) {
 export function updateMeter(meter, password) {
   const strength = estimateStrength(password);
   meter.dataset.score = String(strength.score);
-  meter.querySelector(".meter-bar > span").style.width = `${Math.min(100, (strength.bits / 110) * 100)}%`;
+  const fill = Math.round(Math.min(100, (strength.bits / 110) * 100) / 5);
+  meter.querySelector(".meter-bar > span").dataset.fill = String(fill);
   meter.querySelector(".meter-text").textContent = password
     ? `${strength.label} · ${strength.bits} bits · ${crackTime(strength.bits)} to crack`
     : "";
@@ -590,7 +634,7 @@ export function openGenerator(onUse) {
     render: (close) => {
       const state = { mode: "password", length: 20, words: 5 };
       const output = el("div", { class: "readout" });
-      const note = el("p", { class: "faint", style: "margin:0" });
+      const note = el("p", { class: "faint m0" });
 
       const lower = el("input", { type: "checkbox", checked: true });
       const upper = el("input", { type: "checkbox", checked: true });
@@ -663,7 +707,7 @@ export function openGenerator(onUse) {
 
       return {
         body: [
-          el("div", { class: "tabs", style: "margin:0" }, [
+          el("div", { class: "tabs m0" }, [
             tab("password", "Password"),
             tab("passphrase", "Passphrase"),
           ]),
