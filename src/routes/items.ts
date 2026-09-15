@@ -68,25 +68,47 @@ async function countLive(env: Env, userId: string): Promise<number> {
 /**
  * Checks the account may write, and has room for `adding` more items.
  *
- * Going over quota makes a vault read-only; it never deletes anything. Losing
- * passwords because a card expired would be indefensible.
+ * `overflow` is set by import, and is the whole point of this function. Someone
+ * arriving from another manager pastes in everything they own at once; refusing
+ * the batch because it is three items over a plan limit means they never
+ * migrate, never get invested, and never become a customer. So an import is
+ * allowed to overshoot the plan, and the account simply stops accepting new
+ * items afterwards until it is under the limit again or upgraded.
+ *
+ * Existing items stay readable and editable either way. Going over a plan
+ * should be a nudge, not a hostage situation.
  */
-async function assertRoomFor(env: Env, session: Session, adding: number): Promise<void> {
+async function assertRoomFor(
+  env: Env,
+  session: Session,
+  adding: number,
+  { overflow = false } = {},
+): Promise<void> {
   const user = await loadUser(env, session.userId);
   assertCanWrite(env, user);
 
   const plan = planOf(user);
-  const limit = plan.items === null ? MAX_ITEMS : Math.min(plan.items, MAX_ITEMS);
   const current = await countLive(env, session.userId);
 
-  if (current + adding > limit) {
+  // The hard ceiling is not a plan limit, it is a guard against one account
+  // trying to use the database as free storage. Nothing legitimate approaches it.
+  if (current + adding > MAX_ITEMS) {
     throw new HttpError(
       403,
       "quota_exceeded",
-      plan.items === null
-        ? `A vault is limited to ${MAX_ITEMS} items.`
-        : `The ${plan.name} plan holds ${plan.items} items. Upgrade to add more. Nothing you already have is affected.`,
-      { plan: plan.id, limit, current },
+      `A vault is limited to ${MAX_ITEMS.toLocaleString()} items.`,
+      { limit: MAX_ITEMS, current },
+    );
+  }
+
+  if (overflow || plan.items === null) return;
+
+  if (current + adding > plan.items) {
+    throw new HttpError(
+      403,
+      "quota_exceeded",
+      `The ${plan.name} plan holds ${plan.items} items. Everything you already have stays readable and editable.`,
+      { plan: plan.id, limit: plan.items, current },
     );
   }
 }
@@ -249,7 +271,8 @@ export async function bulkCreate(env: Env, request: Request, session: Session): 
   if (entries.length === 0) return json({ ok: true, created: 0, ids: [] });
   if (entries.length > 2000) throw badRequest("Import at most 2000 items at a time.");
 
-  await assertRoomFor(env, session, entries.length);
+  // An import may overshoot the plan limit. See assertRoomFor.
+  await assertRoomFor(env, session, entries.length, { overflow: true });
 
   const now = Date.now();
   const ids: string[] = [];

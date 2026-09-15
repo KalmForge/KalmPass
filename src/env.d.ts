@@ -25,6 +25,8 @@ declare global {
     /** Display only, for the revenue figure on that dashboard. */
     PRO_PRICE?: string;
     PRO_CURRENCY?: string;
+    /** "month" or "year". Only affects how revenue is displayed. */
+    PRO_INTERVAL?: string;
 
     STRIPE_SECRET_KEY?: string;
     STRIPE_WEBHOOK_SECRET?: string;

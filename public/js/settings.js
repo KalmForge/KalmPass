@@ -659,7 +659,7 @@ function planPanel(refresh) {
                 : vault.planPeriodEnd
                   ? `Renews ${new Date(vault.planPeriodEnd).toLocaleDateString()}.`
                   : "Active."
-              : `${vault.itemCount} of 50 items used · 2 devices · breach monitoring not included.`,
+              : `${vault.itemCount} items, and as many as you like. Two devices, no breach monitoring.`,
           ]),
         ]),
       ]),
@@ -689,7 +689,6 @@ function planPanel(refresh) {
         "Upgrade to Pro",
         [
           el("ul", { class: "bullets" }, [
-            el("li", { text: "Unlimited items" }),
             el("li", { text: "Unlimited devices" }),
             el("li", { text: "Breach monitoring against Have I Been Pwned" }),
             el("li", { text: "Priority support" }),
@@ -704,7 +703,7 @@ function planPanel(refresh) {
             }),
           }),
         ],
-        "Encryption is identical on both plans. Pro buys capacity, not security. We are not going to sell you your own safety.",
+        "Encryption is identical on both plans, and Free keeps unlimited passwords. Pro buys more devices and breach monitoring, not safety.",
       ),
     );
   }

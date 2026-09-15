@@ -129,6 +129,9 @@ export async function overview(env: Env, session: Session): Promise<Response> {
   const counts = firstRow<Record<string, number>>(totals);
   const itemTotals = firstRow<Record<string, number>>(items);
   const price = Number(env.PRO_PRICE ?? "0");
+  const interval = env.PRO_INTERVAL === "month" ? "month" : "year";
+  // Normalised to a month, so an annual plan does not read twelve times high.
+  const monthlyPrice = interval === "year" ? price / 12 : price;
 
   // Every day in the window is present, including the empty ones, so the chart
   // shows real gaps instead of silently compressing them.
@@ -146,6 +149,7 @@ export async function overview(env: Env, session: Session): Promise<Response> {
     windowDays: WINDOW_DAYS,
     currency: env.PRO_CURRENCY ?? "GBP",
     price,
+    interval,
     totals: {
       accounts: counts.accounts ?? 0,
       verified: counts.verified ?? 0,
@@ -161,7 +165,8 @@ export async function overview(env: Env, session: Session): Promise<Response> {
       lockedOut: firstRow<Record<string, number>>(locked).n ?? 0,
       // Paying accounts only. `past_due` is excluded because that money has not
       // arrived, and counting it would flatter the figure.
-      mrr: (counts.pro ?? 0) * price,
+      mrr: (counts.pro ?? 0) * monthlyPrice,
+      arr: (counts.pro ?? 0) * monthlyPrice * 12,
     },
     signups: series,
     accounts: listed,

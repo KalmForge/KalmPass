@@ -82,7 +82,8 @@ function render(data) {
     tiles([
       ["Accounts", t.accounts, `${t.verified} confirmed`],
       ["Paying", t.pro, t.accounts ? `${percent(t.pro, t.accounts)} of accounts` : ""],
-      ["Monthly revenue", money.format(t.mrr), `at ${money.format(data.price)} each`],
+      ["Price", money.format(data.price), `per ${data.interval}`],
+      ["Monthly revenue", money.format(t.mrr), `${money.format(data.arr)} a year`],
       ["New", t.newInWindow, `in ${data.windowDays} days`],
       ["Active", t.activeInWindow, `in ${data.windowDays} days`],
       [

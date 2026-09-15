@@ -180,8 +180,10 @@ Non-secret settings (`APP_URL`, `MAIL_FROM`, `ALLOW_SIGNUP`) live in
       again, or ALLOW_SIGNUP to "false" in wrangler.jsonc.
 - [ ] **Legal.** `public/terms/` and `public/privacy/` are drafts with bracketed
       placeholders. Have a solicitor review them before taking payment.
-- [ ] **Price.** The £2/month on the landing page is a placeholder; it must match
-      the Stripe price.
+- [ ] **Price.** The landing page, `PRO_PRICE` in wrangler.jsonc, and the Stripe
+      price must all agree. `npm run lint:libs` checks the first two; only you
+      can check the third. Currently £12 a year, so the Stripe price needs
+      recreating as an annual one and `STRIPE_PRICE_ID` updating.
 
 ## What this does not protect against
 
@@ -210,4 +212,9 @@ threats.
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+AGPL-3.0. See [LICENSE](LICENSE).
+
+The source is published so that anyone trusting KalmPass with their passwords
+can check it rather than take our word for it. Self-host it, fork it, study it.
+If you offer a modified version to other people as a service, publish your
+changes too.
