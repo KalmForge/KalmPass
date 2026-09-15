@@ -38,7 +38,11 @@ async function stripe(
     headers: {
       authorization: `Bearer ${requireStripe(env)}`,
       "content-type": "application/x-www-form-urlencoded",
-      "stripe-version": "2024-06-20",
+      // Matches the version the webhook endpoint was created with, so API
+      // responses and event payloads have the same shape. Managed Payments
+      // needs 2025-03-31.basil or later, and periodEndOf below copes with the
+      // renewal date having moved onto the subscription item in that release.
+      "stripe-version": "2026-08-26.dahlia",
     },
     body: new URLSearchParams(params).toString(),
   });

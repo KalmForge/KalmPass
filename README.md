@@ -149,7 +149,8 @@ Non-secret settings (`APP_URL`, `MAIL_FROM`, `ALLOW_SIGNUP`) live in
       point a webhook at `https://kalmpass.net/api/billing/webhook` for
       `checkout.session.completed`, `customer.subscription.*` and
       `invoice.payment_failed`.
-- [ ] **Open signups.** `npx wrangler secret delete SIGNUP_TOKEN`.
+- [x] **Open signups.** Done. Re-close them at any time by setting SIGNUP_TOKEN
+      again, or ALLOW_SIGNUP to "false" in wrangler.jsonc.
 - [ ] **Legal.** `public/terms/` and `public/privacy/` are drafts with bracketed
       placeholders. Have a solicitor review them before taking payment.
 - [ ] **Price.** The £2/month on the landing page is a placeholder; it must match

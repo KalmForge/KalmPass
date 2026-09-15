@@ -73,7 +73,7 @@ async function countLive(env: Env, userId: string): Promise<number> {
  */
 async function assertRoomFor(env: Env, session: Session, adding: number): Promise<void> {
   const user = await loadUser(env, session.userId);
-  assertCanWrite(user);
+  assertCanWrite(env, user);
 
   const plan = planOf(user);
   const limit = plan.items === null ? MAX_ITEMS : Math.min(plan.items, MAX_ITEMS);
@@ -93,7 +93,7 @@ async function assertRoomFor(env: Env, session: Session, adding: number): Promis
 
 /** Editing an existing item needs the write check, but not the quota check. */
 async function assertMayEdit(env: Env, session: Session): Promise<void> {
-  assertCanWrite(await loadUser(env, session.userId));
+  assertCanWrite(env, await loadUser(env, session.userId));
 }
 
 /** Trash is a grace period, not an archive. Anything old enough is really gone. */

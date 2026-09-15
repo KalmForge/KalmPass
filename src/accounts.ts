@@ -52,9 +52,12 @@ export const planOf = (user: UserRow): Plan => planFor(user.plan, user.plan_stat
  * Reading is always allowed. Locking someone out of passwords they already
  * own would be a worse outcome than an unverified address.
  */
-export function assertCanWrite(user: UserRow): void {
+export function assertCanWrite(env: Env, user: UserRow): void {
   if (user.email_verified === 1) return;
   if (Date.now() - user.created_at < VERIFY_GRACE_MS) return;
+  // If this instance cannot send mail, nobody can confirm an address, and
+  // locking a vault for failing to do the impossible would be indefensible.
+  if (!env.EMAIL) return;
   throw new HttpError(
     403,
     "email_unverified",
