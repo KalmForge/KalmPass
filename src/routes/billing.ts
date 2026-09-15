@@ -1,8 +1,8 @@
 /**
  * Stripe billing.
  *
- * Called with `fetch` against Stripe's REST API rather than through their SDK —
- * a password manager is a bad place to take on a large dependency tree, and the
+ * Called with `fetch` against Stripe's REST API rather than through their SDK.
+ * A password manager is a bad place to take on a large dependency tree, and the
  * three calls we need are form posts.
  *
  * Nothing here can reach vault contents. The worst a billing bug can do is give
@@ -94,7 +94,7 @@ export async function checkout(env: Env, request: Request, session: Session): Pr
   return json({ url: checkoutSession.url });
 }
 
-/** POST /api/billing/portal — cards, invoices, cancellation. */
+/** POST /api/billing/portal. Cards, invoices, cancellation. */
 export async function portal(env: Env, session: Session): Promise<Response> {
   const user = await loadUser(env, session.userId);
   const customerId = await existingCustomerId(env, user);
@@ -117,7 +117,7 @@ const existingCustomerId = async (env: Env, user: UserRow): Promise<string | nul
 /**
  * POST /api/billing/webhook
  *
- * Unauthenticated by necessity — Stripe has no session — so the signature is the
+ * Unauthenticated by necessity. Stripe has no session, so the signature is the
  * only thing standing between this endpoint and anyone who wants a free Pro
  * plan. It is verified before the body is parsed, and the timestamp is checked
  * so a captured request cannot be replayed later.

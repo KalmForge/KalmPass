@@ -356,7 +356,7 @@ export async function me(env: Env, session: Session): Promise<Response> {
 
 // --- email confirmation -----------------------------------------------------
 
-/** POST /api/account/verify — public, because the link may be opened anywhere. */
+/** POST /api/account/verify. Public, because the link may be opened anywhere. */
 export async function verifyEmail(env: Env, request: Request): Promise<Response> {
   const token = requireString(await readJson(request), "token", { max: 128 });
   const userId = await consumeToken(env, token, "verify_email");
@@ -386,7 +386,7 @@ export async function resendVerification(
 // --- master password --------------------------------------------------------
 
 /**
- * POST /api/account/rekey — change the master password.
+ * POST /api/account/rekey. Change the master password.
  *
  * The vault key does not change, so items are untouched: the browser re-wraps
  * that one key under the new password. Other sessions are dropped, because they
@@ -428,7 +428,7 @@ export async function rekey(
 // --- the Recovery Key -------------------------------------------------------
 
 /**
- * POST /api/account/recover — step one of forgotten-password.
+ * POST /api/account/recover. Step one of forgotten-password.
  *
  * Proves possession of the Recovery Key and hands back the copy of the vault key
  * that the Recovery Key wraps. That blob is useless without the key itself, which
@@ -478,7 +478,7 @@ export async function recover(env: Env, request: Request): Promise<Response> {
 }
 
 /**
- * POST /api/account/recover/complete — step two.
+ * POST /api/account/recover/complete. Step two.
  *
  * Sets a new master password and issues a fresh Recovery Key, because the old
  * one has now been typed into a browser and should be considered spent.
@@ -529,7 +529,7 @@ export async function recoverComplete(
   return json({ ok: true }, { headers: { "set-cookie": clearedCookie() } });
 }
 
-/** POST /api/account/recovery-key/rotate — issue a new Recovery Key on demand. */
+/** POST /api/account/recovery-key/rotate. Issue a new Recovery Key on demand. */
 export async function rotateRecoveryKey(
   env: Env,
   request: Request,
@@ -565,7 +565,7 @@ export async function rotateRecoveryKey(
  * POST /api/account/reset/request
  *
  * For an account whose master password *and* Recovery Key are both gone. This
- * cannot restore anything — it destroys the vault so the address can be used
+ * cannot restore anything, it destroys the vault so the address can be used
  * again. Always answers 200, so it cannot be used to probe for accounts.
  */
 export async function requestReset(
@@ -591,7 +591,7 @@ export async function requestReset(
   });
 }
 
-/** POST /api/account/reset/confirm — wipes the vault and re-keys the account. */
+/** POST /api/account/reset/confirm. Wipes the vault and re-keys the account. */
 export async function confirmReset(env: Env, request: Request): Promise<Response> {
   const body = await readJson(request);
   const userId = await consumeToken(env, requireString(body, "token", { max: 128 }), "reset_account");
@@ -631,7 +631,7 @@ export async function confirmReset(env: Env, request: Request): Promise<Response
 
 // --- second factor ----------------------------------------------------------
 
-/** POST /api/account/totp/start — mints a secret but does not arm it yet. */
+/** POST /api/account/totp/start. Mints a secret but does not arm it yet. */
 export async function totpStart(env: Env, session: Session): Promise<Response> {
   const user = await loadUser(env, session.userId);
   if (user.totp_enabled === 1) throw conflict("Two-factor authentication is already on.");
@@ -647,7 +647,7 @@ export async function totpStart(env: Env, session: Session): Promise<Response> {
   return json({ secret, uri });
 }
 
-/** POST /api/account/totp/enable — arms it only once a live code proves it works. */
+/** POST /api/account/totp/enable. Arms it only once a live code proves it works. */
 export async function totpEnable(env: Env, request: Request, session: Session): Promise<Response> {
   const user = await loadUser(env, session.userId);
   if (user.totp_enabled === 1) throw conflict("Two-factor authentication is already on.");
@@ -657,7 +657,7 @@ export async function totpEnable(env: Env, request: Request, session: Session): 
   const secret = await open(env, user.totp_secret_enc, `user.totp:${user.id}`);
   if (!(await verifyTotp(secret, code))) throw unauthorized("That code was not accepted.");
 
-  // Shown once, then only their hashes are kept — we cannot recover them later.
+  // Shown once, then only their hashes are kept. We cannot recover them later.
   const codes = Array.from({ length: RECOVERY_CODE_COUNT }, () => toB64Url(randomBytes(9)));
   const hashed = await Promise.all(codes.map((c) => pepper(env, `backup:${user.id}:${c}`)));
 
@@ -671,7 +671,7 @@ export async function totpEnable(env: Env, request: Request, session: Session): 
   return json({ ok: true, backupCodes: codes });
 }
 
-/** POST /api/account/totp/disable — requires the master password again. */
+/** POST /api/account/totp/disable. Requires the master password again. */
 export async function totpDisable(env: Env, request: Request, session: Session): Promise<Response> {
   const user = await loadUser(env, session.userId);
   await assertMasterPassword(env, user, await readJson(request));
@@ -747,7 +747,7 @@ export async function listSessions(env: Env, session: Session): Promise<Response
   });
 }
 
-/** DELETE /api/account/sessions — sign out everywhere else. */
+/** DELETE /api/account/sessions. Sign out everywhere else. */
 export async function revokeOtherSessions(env: Env, session: Session): Promise<Response> {
   const revoked = await destroyOtherSessions(env, session);
   await audit.record(env, session.userId, "sessions_revoked");
@@ -759,7 +759,7 @@ export async function activity(env: Env, session: Session): Promise<Response> {
   return json({ events: await audit.list(env, session.userId) });
 }
 
-/** DELETE /api/account — irreversible, and gated on the master password. */
+/** DELETE /api/account. Irreversible, and gated on the master password. */
 export async function deleteAccount(
   env: Env,
   request: Request,

@@ -14,7 +14,7 @@ let ticker = null;
 // --- derived state ----------------------------------------------------------
 
 /**
- * Weak and reused flags, computed once per render rather than per row — a vault
+ * Weak and reused flags, computed once per render rather than per row, a vault
  * of a few thousand items otherwise re-scores the same password repeatedly.
  */
 function index(items) {
@@ -184,7 +184,7 @@ function emptyMessage() {
   if (view.query) return `Nothing matches “${view.query}”.`;
   return {
     trash: "The trash is empty.",
-    favorites: "No favorites yet — star an item to keep it here.",
+    favorites: "No favorites yet. Star an item to keep it here.",
     weak: "No weak passwords. Nicely done.",
     reused: "No reused passwords. Nicely done.",
     folder: "This folder is empty.",

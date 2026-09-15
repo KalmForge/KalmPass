@@ -4,7 +4,7 @@
  * The seed is stored inside the item's encrypted blob and the code is computed
  * here, in the tab. The server never sees a seed and never computes a code, so
  * this second factor stays a genuinely separate secret from the password beside
- * it — which is the entire point of having one.
+ * it, which is the entire point of having one.
  */
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";

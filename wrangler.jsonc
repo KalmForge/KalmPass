@@ -5,7 +5,7 @@
   "compatibility_date": "2026-09-15",
 
   // The marketing site and the app are both served straight from the edge as
-  // static assets. The Worker only ever runs for /api/* — it renders no HTML, so
+  // static assets. The Worker only ever runs for /api/*, it renders no HTML, so
   // there is no template injection surface anywhere in the product.
   "assets": {
     "directory": "./public",

@@ -49,7 +49,7 @@ export const planOf = (user: UserRow): Plan => planFor(user.plan, user.plan_stat
 
 /**
  * Writing to a vault requires a confirmed address once the grace period is up.
- * Reading is always allowed — locking someone out of passwords they already
+ * Reading is always allowed. Locking someone out of passwords they already
  * own would be a worse outcome than an unverified address.
  */
 export function assertCanWrite(user: UserRow): void {

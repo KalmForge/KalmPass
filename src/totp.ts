@@ -2,7 +2,7 @@
  * RFC 6238 TOTP, used for the optional second factor on the login itself.
  *
  * (The authenticator codes you *store in the vault* are a separate thing and are
- * computed in the browser — their seeds are never sent here in the clear.)
+ * computed in the browser. Their seeds are never sent here in the clear.)
  */
 
 import { timingSafeEqual } from "./crypto";

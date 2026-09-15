@@ -16,7 +16,7 @@ export const PLANS: Record<string, Plan> = {
 
 /**
  * A subscription that has lapsed drops back to Free limits, but never deletes
- * anything — an over-quota vault becomes read-only rather than losing items.
+ * anything, an over-quota vault becomes read-only rather than losing items.
  * Nobody should lose passwords because a card expired.
  */
 export function planFor(plan: string, status: string | null): Plan {

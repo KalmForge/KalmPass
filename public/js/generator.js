@@ -3,7 +3,7 @@
  *
  * Every random choice comes from `crypto.getRandomValues` via rejection
  * sampling. `Math.random()` appears nowhere in this file, and the modulo bias
- * that `% n` would introduce is avoided explicitly — a generator that quietly
+ * that `% n` would introduce is avoided explicitly, a generator that quietly
  * favours some characters is a generator that quietly loses you entropy.
  */
 
@@ -126,7 +126,7 @@ export function passwordEntropy(options = {}) {
 }
 
 /**
- * A rough entropy estimate for a password someone else chose — used by the
+ * A rough entropy estimate for a password someone else chose. Used by the
  * health report, where we cannot know how it was generated.
  *
  * Deliberately pessimistic: it detects the obvious patterns (repeats, runs,

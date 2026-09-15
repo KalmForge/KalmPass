@@ -1,44 +1,45 @@
-/* KalmPass — one stylesheet, no framework, no external fonts. */
+/* KalmPass, one stylesheet, no framework, no external fonts. */
 
 :root {
-  --bg: #081326;
-  --bg-raised: #0e1d36;
-  --bg-sunken: #060f1f;
-  --line: #1d2f4d;
-  --line-soft: #16253e;
-  --text: #e8eef7;
-  --text-dim: #93a7c2;
-  --text-faint: #6b809c;
-  --accent: #4aa8f5;
-  --accent-soft: #15325c;
-  --teal: #2fd8bc;
-  --good: #2fd8bc;
-  --warn: #f0b04a;
-  --bad: #ff7070;
-  --radius: 10px;
-  --radius-lg: 16px;
-  --shadow: 0 18px 50px rgb(2 8 20 / 0.55);
+  --bg: #f6f7f9;
+  --bg-raised: #ffffff;
+  --bg-sunken: #eef0f3;
+  --line: #dde2e8;
+  --line-soft: #e9edf1;
+  --text: #14181f;
+  --text-dim: #4b5563;
+  --text-faint: #7c8694;
+  --accent: #1b5fc4;
+  --accent-soft: #e6eefb;
+  --teal: #0c7d69;
+  --good: #0c7d69;
+  --warn: #a8690f;
+  --bad: #c0362c;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --shadow: 0 14px 36px rgb(20 24 31 / 0.11);
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
-@media (prefers-color-scheme: light) {
+/* Light is the default. Dark follows the reader, it is not the house style. */
+@media (prefers-color-scheme: dark) {
   :root {
-    --bg: #f4f7fb;
-    --bg-raised: #ffffff;
-    --bg-sunken: #eaeff6;
-    --line: #d8e1ee;
-    --line-soft: #e7edf5;
-    --text: #0c1a2e;
-    --text-dim: #51617a;
-    --text-faint: #8493a8;
-    --accent: #1668c9;
-    --accent-soft: #d9e8fb;
-    --teal: #0f9e88;
-    --good: #0f9e88;
-    --warn: #a86a00;
-    --bad: #c62f2f;
-    --shadow: 0 16px 40px rgb(12 26 46 / 0.12);
+    --bg: #0d1219;
+    --bg-raised: #141b25;
+    --bg-sunken: #090d13;
+    --line: #242e3b;
+    --line-soft: #1b2430;
+    --text: #e8ecf2;
+    --text-dim: #9aa6b6;
+    --text-faint: #6f7d8f;
+    --accent: #5aa6f0;
+    --accent-soft: #1a2f4b;
+    --teal: #2fc7ae;
+    --good: #2fc7ae;
+    --warn: #e0a441;
+    --bad: #f07a72;
+    --shadow: 0 16px 42px rgb(2 6 12 / 0.55);
   }
 }
 

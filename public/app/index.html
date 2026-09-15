@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>KalmPass</title>
     <meta name="description" content="Your KalmPass vault." />
-    <meta name="theme-color" content="#081326" />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#f6f7f9" />
+    <meta name="color-scheme" content="light dark" />
     <!-- A vault should not be summarised by anyone's crawler. -->
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -87,7 +87,7 @@
             <strong>We cannot reset this password.</strong>
             Your vault is encrypted with it before it ever leaves this device, so nobody at
             KalmPass can read your data or let you back in. You will get a Recovery Key on the
-            next screen — that is the safety net.
+            next screen. That is the safety net.
           </div>
 
           <label class="check">
@@ -105,7 +105,7 @@
           <div class="warn">
             <strong>This is the only time you will see this.</strong>
             Your Recovery Key is the one way back into your vault if you forget your master
-            password. Print it, or write it down and keep it somewhere safe — not in this vault.
+            password. Print it, or write it down and keep it somewhere safe, but not in this vault.
           </div>
           <div id="kit-key" class="readout kit-key"></div>
           <div class="kit-actions">
@@ -145,7 +145,7 @@
         <!-- Set a new master password after recovery -->
         <form id="view-recover-set" class="stack auth-view" novalidate hidden>
           <p class="muted" style="margin:0">
-            Recovery Key accepted. Choose a new master password — your vault is waiting.
+            Recovery Key accepted. Choose a new master password. Your vault is waiting.
           </p>
           <label class="field">
             <span>New master password</span>
@@ -168,7 +168,7 @@
           <div class="warn">
             <strong>This erases your vault.</strong>
             Without your master password or your Recovery Key, there is no key in existence that
-            can decrypt your data — not ours, not Cloudflare's. All we can do is clear the account
+            can decrypt your data. Not ours, not Cloudflare's. All we can do is clear the account
             so you can start again.
           </div>
           <label class="field">

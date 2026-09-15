@@ -10,7 +10,7 @@ export const DEFAULT_KDF_ITERATIONS = 1_000_000;
 export const MIN_KDF_ITERATIONS = 600_000;
 export const MAX_KDF_ITERATIONS = 10_000_000;
 
-/** 32 bytes, base64 — the size of every key and hash crossing the wire. */
+/** 32 bytes, base64, the size of every key and hash crossing the wire. */
 export const KEY_BYTES = 32;
 
 export const RECOVERY_CODE_COUNT = 10;

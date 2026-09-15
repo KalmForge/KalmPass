@@ -10,11 +10,11 @@ import { HttpError, badRequest, json, readJson, requireString } from "../http";
 import type { Session } from "../sessions";
 
 /**
- * POST /api/tools/breach — Have I Been Pwned range lookup.
+ * POST /api/tools/breach. Have I Been Pwned range lookup.
  *
  * k-anonymity: the browser SHA-1s the password locally and sends only the first
- * five hex characters. HIBP returns every suffix under that prefix — hundreds of
- * hashes — and the browser checks for its own among them. The password, and
+ * five hex characters. HIBP returns every suffix under that prefix. Hundreds of
+ * hashes, and the browser checks for its own among them. The password, and
  * which of the returned hashes was yours, never leave the device.
  *
  * It is proxied rather than called directly so that HIBP sees the Worker rather

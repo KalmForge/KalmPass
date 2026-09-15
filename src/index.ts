@@ -1,5 +1,5 @@
 /**
- * KalmPass — the entire server.
+ * KalmPass, the entire server.
  *
  * Two things are worth knowing before reading further:
  *

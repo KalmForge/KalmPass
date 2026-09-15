@@ -105,7 +105,7 @@ async function start() {
   const account = await store.hasServerSession();
   if (account) {
     // A live server session means the browser only needs the master password
-    // again to rebuild the keys — no second session, no second login.
+    // again to rebuild the keys, no second session, no second login.
     $("#signin-email").value = account.email;
     resumeMode = true;
     showAuthView("signin");
@@ -210,7 +210,7 @@ $("#view-signup").addEventListener("submit", async (event) => {
   if (password !== $("#signup-confirm").value) return fail(error, "The passwords do not match.");
   if (password.length < 12) return fail(error, "Use at least 12 characters.");
   if (estimateStrength(password).score < 2) {
-    return fail(error, "Choose something stronger — everything rests on this one password.");
+    return fail(error, "Choose something stronger. Everything rests on this one password.");
   }
   if (!$("#signup-ack").checked) return fail(error, "Please confirm you understand.");
 
@@ -268,7 +268,7 @@ $("#kit-download").addEventListener("click", () => {
     "your vault. Go to https://kalmpass.net/app/ and choose \"Forgot your",
     "master password?\".",
     "",
-    "Keep this somewhere safe and offline — a printed copy in a drawer, or a",
+    "Keep this somewhere safe and offline, a printed copy in a drawer, or a",
     "safe. Do not store it in the vault it protects.",
     "",
     "KalmPass cannot read your vault and cannot reset your master password.",

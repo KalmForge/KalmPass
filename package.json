@@ -12,7 +12,8 @@
     "db:init:local": "wrangler d1 execute kalmpass --local --file=./schema.sql",
     "typecheck": "tsc --noEmit",
     "types": "wrangler types",
-    "tail": "wrangler tail"
+    "tail": "wrangler tail",
+    "lint:copy": "node scripts/check-punctuation.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

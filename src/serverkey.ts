@@ -3,9 +3,9 @@
  *
  * Everything persisted to D1 passes through here first. The key material is
  * derived from SERVER_KEY, a Cloudflare Worker secret, which means it lives in
- * a different system from the database it protects. Read access to D1 — a
+ * a different system from the database it protects. Read access to D1, a
  * leaked backup, a compromised API token, a subpoena served on the storage
- * layer — yields ciphertext and nothing else.
+ * layer. Yields ciphertext and nothing else.
  *
  * SERVER_KEY is not a backdoor into your vault. Even holding it, the contents
  * of `items.data` are still AES-GCM ciphertext under a key that only your
@@ -102,7 +102,7 @@ function keys(env: Env): Promise<ServerKeys> {
 
 /**
  * `context` is bound into the ciphertext as additional authenticated data, so a
- * blob cannot be lifted out of one row and replayed into another — an attacker
+ * blob cannot be lifted out of one row and replayed into another, an attacker
  * with write access to D1 cannot swap your vault key for someone else's.
  */
 export async function seal(env: Env, plaintext: string, context: string): Promise<string> {

@@ -85,7 +85,7 @@ async function assertRoomFor(env: Env, session: Session, adding: number): Promis
       "quota_exceeded",
       plan.items === null
         ? `A vault is limited to ${MAX_ITEMS} items.`
-        : `The ${plan.name} plan holds ${plan.items} items. Upgrade to add more — nothing you already have is affected.`,
+        : `The ${plan.name} plan holds ${plan.items} items. Upgrade to add more. Nothing you already have is affected.`,
       { plan: plan.id, limit, current },
     );
   }
@@ -96,7 +96,7 @@ async function assertMayEdit(env: Env, session: Session): Promise<void> {
   assertCanWrite(await loadUser(env, session.userId));
 }
 
-/** Trash is a grace period, not an archive — anything old enough is really gone. */
+/** Trash is a grace period, not an archive. Anything old enough is really gone. */
 async function purgeOldTrash(env: Env, userId: string): Promise<void> {
   await env.DB.prepare(`DELETE FROM items WHERE user_id = ? AND deleted_at IS NOT NULL AND deleted_at < ?`)
     .bind(userId, Date.now() - TRASH_RETENTION_MS)
@@ -106,7 +106,7 @@ async function purgeOldTrash(env: Env, userId: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * GET /api/items — the whole vault, trash included.
+ * GET /api/items, the whole vault, trash included.
  *
  * `?since=` returns only rows touched after that timestamp, which is how a
  * second device catches up without re-downloading everything.
@@ -189,7 +189,7 @@ export async function update(
   return json({ id, revision: next, updatedAt: now });
 }
 
-/** DELETE /api/items/:id — to the trash, recoverable for 30 days. */
+/** DELETE /api/items/:id, to the trash, recoverable for 30 days. */
 export async function remove(env: Env, session: Session, id: string): Promise<Response> {
   const now = Date.now();
   const result = await env.DB.prepare(
@@ -217,7 +217,7 @@ export async function restore(env: Env, session: Session, id: string): Promise<R
   return json({ ok: true });
 }
 
-/** DELETE /api/items/:id/purge — gone for good. */
+/** DELETE /api/items/:id/purge. Gone for good. */
 export async function purge(env: Env, session: Session, id: string): Promise<Response> {
   const result = await env.DB.prepare(`DELETE FROM items WHERE id = ? AND user_id = ?`)
     .bind(id, session.userId)
@@ -226,7 +226,7 @@ export async function purge(env: Env, session: Session, id: string): Promise<Res
   return json({ ok: true });
 }
 
-/** DELETE /api/items/trash — empty the trash in one go. */
+/** DELETE /api/items/trash. Empty the trash in one go. */
 export async function emptyTrash(env: Env, session: Session): Promise<Response> {
   const result = await env.DB.prepare(
     `DELETE FROM items WHERE user_id = ? AND deleted_at IS NOT NULL`,
@@ -237,7 +237,7 @@ export async function emptyTrash(env: Env, session: Session): Promise<Response> 
 }
 
 /**
- * POST /api/items/bulk — used by import.
+ * POST /api/items/bulk. Used by import.
  *
  * Written as one D1 batch so a partial import cannot leave the vault holding
  * half a file.

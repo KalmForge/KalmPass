@@ -7,7 +7,7 @@
 
 ---
 
-KalmPass is a zero-knowledge password manager running entirely on Cloudflare — a
+KalmPass is a zero-knowledge password manager running entirely on Cloudflare, a
 Worker, a D1 database, and a static front end served from the edge. Vaults are
 encrypted in the browser under a key derived from a master password that is never
 transmitted, so the server stores ciphertext it has no means of reading.
@@ -37,7 +37,7 @@ master password ──PBKDF2-SHA256 × 1,000,000 (salt: email)──▶ master k
        └── also wrapped by your Recovery Key (125 bits, saved offline)
 ```
 
-Two independent secrets open a vault — the master password and the Recovery Key.
+Two independent secrets open a vault, the master password and the Recovery Key.
 KalmPass holds neither. That is the whole design: recovery is possible for the
 account holder without anyone escrowing a key on their behalf.
 
@@ -65,7 +65,7 @@ and in [`public/security/index.html`](public/security/index.html).
 ## Repository layout
 
 ```
-src/                  the Worker — no runtime dependencies
+src/                  the Worker, no runtime dependencies
   index.ts            router; the only entry point
   crypto.ts           hashing, random, constant-time compare
   serverkey.ts        the server envelope (layer 2) and blind indexes
@@ -82,7 +82,7 @@ public/               static, served from the edge
   index.html          marketing site
   security/ terms/ privacy/
   app/index.html      the vault
-  js/crypto.js        client-side cryptography — the part that matters
+  js/crypto.js        client-side cryptography, the part that matters
   js/store.js         vault state; nothing is ever written to disk
   js/*.js             ui, generator, totp, health, settings
   _headers            CSP and the rest of the security headers

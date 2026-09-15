@@ -1,7 +1,7 @@
 /**
  * Passphrase wordlist.
  *
- * Short, common, unambiguous English words — easy to read off a screen and type
+ * Short, common, unambiguous English words. Easy to read off a screen and type
  * on a phone keyboard. The generator computes entropy from the real length of
  * this list after de-duplication, so the strength it reports stays honest even
  * if the list is edited.

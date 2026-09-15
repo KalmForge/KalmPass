@@ -1,6 +1,6 @@
 /**
- * Vault health: weak passwords, reused passwords, stale passwords, and — only
- * if you ask for it — passwords that appear in known breach corpora.
+ * Vault health: weak passwords, reused passwords, stale passwords, and, only
+ * if you ask for it. Passwords that appear in known breach corpora.
  *
  * All of it is computed here against already-decrypted items. The breach check
  * is the single feature in KalmPass that touches the network beyond your own
@@ -63,7 +63,7 @@ function scoreOf(total, weak, reused, stale) {
  * Have I Been Pwned, without telling them anything.
  *
  * We SHA-1 the password locally, send only the first five hex characters, and
- * receive every suffix sharing that prefix — typically several hundred. The
+ * receive every suffix sharing that prefix, typically several hundred. The
  * match is found here. HIBP learns a five-character prefix that fits hundreds of
  * thousands of real passwords, and nothing else; the request is proxied through
  * your own Worker, so they do not see your IP either.

@@ -33,7 +33,7 @@ interface Mail {
 
 /**
  * Email clients strip <style> blocks and block remote images, so the mark is
- * drawn with nested tables and background colours — it renders the same
+ * drawn with nested tables and background colours, it renders the same
  * everywhere, including in a plain dark-mode inbox.
  */
 function layout(mail: Mail): string {
@@ -103,7 +103,7 @@ function layout(mail: Mail): string {
 
 function plain(mail: Mail): string {
   return [
-    `KalmPass — ${mail.heading}`,
+    `KalmPass. ${mail.heading}`,
     "",
     ...mail.lines,
     mail.action ? `\n${mail.action.label}:\n${mail.action.url}` : "",
@@ -165,9 +165,9 @@ export const sendAccountReset = (env: Env, to: string, url: string) =>
     subject: "Erase your KalmPass vault",
     heading: "You asked to erase your vault",
     lines: [
-      "This is the last resort for an account whose master password and Recovery Key are both lost. Because we hold no key to your data, there is no way to recover it — the only thing we can do is clear the account so you can start again.",
+      "This is the last resort for an account whose master password and Recovery Key are both lost. Because we hold no key to your data, there is no way to recover it. The only thing we can do is clear the account so you can start again.",
       "Continuing will permanently destroy every item in your vault. Anything you have not exported is gone.",
-      "If you still have your Recovery Key, stop here and use that instead — it restores your vault intact.",
+      "If you still have your Recovery Key, stop here and use that instead. It restores your vault intact.",
       "This link is good for one hour and can be used once.",
     ],
     action: { label: "Erase my vault and start over", url },
@@ -180,7 +180,7 @@ export const sendRecoveryUsed = (env: Env, to: string, when: string) =>
     heading: "Your Recovery Key was used",
     lines: [
       `Someone used your Recovery Key to set a new master password on ${when}.`,
-      "If that was you, nothing further is needed — a fresh Recovery Key was issued at the same time and the old one no longer works.",
+      "If that was you, nothing further is needed. A fresh Recovery Key was issued at the same time and the old one no longer works.",
       "If it was not you, whoever did it now has access to your vault. Change your master password immediately and review your recent activity.",
     ],
     action: { label: "Review account activity", url: `${env.APP_URL}/app/` },
@@ -204,7 +204,7 @@ export const sendNewDeviceAlert = (env: Env, to: string, device: string, when: s
     lines: [
       `${device} signed in to your vault on ${when}.`,
       "If that was you, there is nothing to do.",
-      "If it was not, change your master password now — whoever signed in has the current one.",
+      "If it was not, change your master password now. Whoever signed in has the current one.",
     ],
     action: { label: "Review account activity", url: `${env.APP_URL}/app/` },
   });

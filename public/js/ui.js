@@ -1,4 +1,4 @@
-/** Toasts, modals, and the clipboard — the shared furniture. */
+/** Toasts, modals, and the clipboard, the shared furniture. */
 
 import { $, clear, el, focus } from "./dom.js";
 
@@ -37,7 +37,7 @@ export async function copy(text, label = "Copied") {
   }
 
   const seconds = clipboard.clearAfterSeconds;
-  toast(seconds > 0 ? `${label} — clears in ${seconds}s` : label);
+  toast(seconds > 0 ? `${label}. Clears in ${seconds}s` : label);
 
   clearTimeout(clearTimer);
   if (seconds > 0) {
@@ -47,7 +47,7 @@ export async function copy(text, label = "Copied") {
         // certainly copied something of their own since.
         if (document.hasFocus()) await navigator.clipboard.writeText("");
       } catch {
-        /* Nothing to do — the clipboard is a courtesy, not a guarantee. */
+        /* Nothing to do, the clipboard is a courtesy, not a guarantee. */
       }
     }, seconds * 1000);
   }

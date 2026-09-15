@@ -2,8 +2,8 @@
  * Vault state.
  *
  * Decrypted items live here, in memory, for exactly as long as the vault is
- * unlocked. Nothing is written to localStorage, sessionStorage or IndexedDB —
- * an unlocked vault leaves no trace on disk, so closing the tab really is the
+ * unlocked. Nothing is written to localStorage, sessionStorage or IndexedDB, so
+ * an unlocked vault leaves no trace on disk and closing the tab really is the
  * end of it.
  */
 
@@ -90,8 +90,8 @@ function adopt(account) {
  * Creates the account and returns the Recovery Key, which is shown once and
  * never again.
  *
- * The vault key is wrapped twice here — once under the master password, once
- * under the Recovery Key — and both wrapped copies go to the server. Neither
+ * The vault key is wrapped twice here, once under the master password, once
+ * under the Recovery Key, and both wrapped copies go to the server. Neither
  * unwrapping secret does, which is why a forgotten password is recoverable by
  * the account holder and by nobody else.
  */
@@ -128,7 +128,7 @@ export async function signup(email, masterPassword, setupCode) {
 // --- signing in -------------------------------------------------------------
 
 /**
- * Throws with `code === "totp_required"` when a second factor is set — the
+ * Throws with `code === "totp_required"` when a second factor is set, the
  * caller collects the code and calls again with it. That ordering is
  * deliberate: the second factor is only mentioned once the master password has
  * already been accepted.
@@ -269,7 +269,7 @@ export async function rotateRecoveryKey(currentPassword) {
 
 /**
  * The last resort, for an account with neither password nor Recovery Key.
- * This destroys the vault — there is nothing else it could do.
+ * This destroys the vault. There is nothing else it could do.
  */
 export async function resetConfirm(token, email, newPassword) {
   const address = normalizeEmail(email);
@@ -412,7 +412,7 @@ export async function emptyTrash() {
 /**
  * Change the master password.
  *
- * The vault key does not change, so items are left alone — we re-wrap that one
+ * The vault key does not change, so items are left alone. We re-wrap that one
  * key and hand the server a new verifier. The Recovery Key still works, because
  * it wraps the same unchanged vault key.
  */

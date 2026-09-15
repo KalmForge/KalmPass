@@ -20,7 +20,7 @@ import { render, updateMeter, view } from "./vault-view.js";
 
 /**
  * Preferences, not secrets. These two numbers are the only thing KalmPass ever
- * writes to disk — no vault data goes near localStorage.
+ * writes to disk, no vault data goes near localStorage.
  */
 export const prefs = {
   autoLockMinutes: 15,
@@ -196,7 +196,7 @@ const PANELS = {
           onClick: () => rotateRecoveryKey(refresh),
         }),
       ],
-      "The only way back into your vault if you forget your master password. We do not hold a copy — if you have lost yours, issue a new one now while you can still sign in.",
+      "The only way back into your vault if you forget your master password. We do not hold a copy. If you have lost yours, issue a new one now while you can still sign in.",
     ),
 
     section("How recovery works", [
@@ -340,7 +340,7 @@ function changeMasterPassword() {
             return;
           }
           if (estimateStrength(next.value).score < 2) {
-            error.textContent = "Choose something stronger — this one would not last long.";
+            error.textContent = "Choose something stronger. This one would not last long.";
             error.hidden = false;
             return;
           }
@@ -527,7 +527,7 @@ function showBackupCodes(codes) {
       body: [
         el("div", { class: "warn" }, [
           el("strong", { text: "This is the only time you will see these." }),
-          "Each one signs you in once if you lose your authenticator. They are not a substitute for your Recovery Key — keep both.",
+          "Each one signs you in once if you lose your authenticator. They are not a substitute for your Recovery Key. Keep both.",
         ]),
         el("div", { class: "codes" }, codes.map((code) => el("span", { text: code }))),
         el("div", { style: "display:flex;gap:8px" }, [
@@ -613,7 +613,7 @@ function planPanel(refresh) {
             }),
           }),
         ],
-        "Cards, invoices and cancellation are handled by Stripe. Cancelling keeps Pro until the end of the period, then drops you to Free — nothing is ever deleted.",
+        "Cards, invoices and cancellation are handled by Stripe. Cancelling keeps Pro until the end of the period, then drops you to Free. Nothing is ever deleted.",
       ),
     );
   } else {
@@ -637,7 +637,7 @@ function planPanel(refresh) {
             }),
           }),
         ],
-        "Encryption is identical on both plans. Pro buys capacity, not security — we are not going to sell you your own safety.",
+        "Encryption is identical on both plans. Pro buys capacity, not security. We are not going to sell you your own safety.",
       ),
     );
   }
@@ -687,7 +687,7 @@ function healthPanel() {
           "ul",
           {},
           report.weak.slice(0, 12).map(({ item, strength }) =>
-            el("li", {}, [itemLink(item), ` — ${strength.bits} bits, cracked in ${crackTime(strength.bits)}`]),
+            el("li", {}, [itemLink(item), `: ${strength.bits} bits, cracked in ${crackTime(strength.bits)}`]),
           ),
         ),
       ]),
@@ -750,7 +750,7 @@ function healthPanel() {
                 "ul",
                 {},
                 found.map(({ item, count }) =>
-                  el("li", {}, [itemLink(item), ` — seen ${count.toLocaleString()} times. Change it.`]),
+                  el("li", {}, [itemLink(item), `: seen ${count.toLocaleString()} times. Change it.`]),
                 ),
               ),
         );
@@ -869,7 +869,7 @@ function activityPanel() {
                 el("li", {
                   text:
                     `${ACTIVITY_LABELS[event.kind] ?? event.kind}` +
-                    `${event.detail ? ` — ${event.detail}` : ""} · ${relativeTime(event.at)}`,
+                    `${event.detail ? `. ${event.detail}` : ""} · ${relativeTime(event.at)}`,
                 }),
               ),
             ),
@@ -931,7 +931,7 @@ function exportBackup() {
             return;
           }
           if (estimateStrength(passphrase.value).score < 2) {
-            error.textContent = "Use a stronger passphrase — this file will sit on a disk somewhere.";
+            error.textContent = "Use a stronger passphrase. This file will sit on a disk somewhere.";
             error.hidden = false;
             return;
           }
@@ -1094,7 +1094,7 @@ async function deleteVault() {
   const sure = await confirmDialog({
     title: "Delete this account?",
     message:
-      "Every item will be destroyed along with the account. We hold no copy and no backup — if you have not exported one, this is final.",
+      "Every item will be destroyed along with the account. We hold no copy and no backup. If you have not exported one, this is final.",
     confirmLabel: "Continue",
     danger: true,
   });
@@ -1124,6 +1124,6 @@ function download(filename, content, type) {
   document.body.append(link);
   link.click();
   link.remove();
-  // Revoked promptly so the blob — which holds vault data — is not left alive.
+  // Revoked promptly so the blob, which holds vault data. Is not left alive.
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

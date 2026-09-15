@@ -3,34 +3,36 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Privacy Policy — KalmPass</title>
+    <title>Privacy Policy. KalmPass.</title>
     <meta name="description" content="What KalmPass collects, why, and how little of it we can actually read." />
-    <meta name="theme-color" content="#071022" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://kalmpass.net/privacy/" />
     <link rel="stylesheet" href="/site.css" />
   </head>
   <body>
-    <header class="shell">
-      <nav class="nav">
-        <a class="nav-brand" href="/">
-          <img src="/icon.svg" alt="" width="32" height="32" />
+    <header class="masthead">
+      <div class="wrap">
+        <a class="wordmark" href="/">
+          <img src="/icon.svg" alt="" width="30" height="30" />
           KalmPass
         </a>
-        <div class="nav-links">
+        <nav>
+          <a href="/#how">How it works</a>
+          <a href="/#pricing">Pricing</a>
           <a href="/security/">Security</a>
-          <a class="btn btn-ghost btn-sm" href="/app/">Sign in</a>
-        </div>
-      </nav>
+          <a class="btn btn-solid btn-small" href="/app/">Sign in</a>
+        </nav>
+      </div>
     </header>
 
-    <main class="prose">
+    <main class="doc">
       <h1>Privacy Policy</h1>
       <p class="faint">Last updated 15 September 2026.</p>
 
-      <div class="callout">
-        <strong>Draft — have this reviewed before you take payment.</strong>
+      <div class="note caution">
+        <strong>Draft. Have this reviewed before you take payment.</strong>
         <p>
           This is a working draft written to match what the software actually does. It is not legal
           advice, and the bracketed details still need filling in. A solicitor should review it
@@ -74,7 +76,7 @@
         <tr>
           <th>Authentication data</th>
           <td>
-            A peppered hash of a verifier derived from your master password — never the password
+            A peppered hash of a verifier derived from your master password, never the password
             itself. Optional two-factor secrets, stored encrypted. Lawful basis: contract.
           </td>
         </tr>
@@ -114,15 +116,15 @@
       <h2>Who we share it with</h2>
       <ul>
         <li>
-          <strong>Cloudflare, Inc.</strong> — hosting, database and email delivery. Data is held in
+          <strong>Cloudflare, Inc.</strong> for hosting, database and email delivery. Data is held in
           Cloudflare's network; the database region is <strong>[Western Europe]</strong>.
         </li>
         <li>
-          <strong>Stripe, Inc.</strong> — payment processing, for subscribers only. Stripe is the
+          <strong>Stripe, Inc.</strong> for payment processing, subscribers only. Stripe is the
           controller of your payment details.
         </li>
         <li>
-          <strong>Have I Been Pwned</strong> — only if you run a breach check, and only a five-character
+          <strong>Have I Been Pwned</strong>, only if you run a breach check, and only a five-character
           hash prefix, proxied through our servers so your IP is not disclosed.
         </li>
       </ul>
@@ -147,14 +149,14 @@
       </p>
       <ul>
         <li>
-          <strong>Access and portability</strong> — Settings → Backup exports your entire vault in a
+          <strong>Access and portability.</strong> Settings, then Backup, exports your entire vault in a
           standard encrypted file, immediately and without asking us.
         </li>
         <li>
-          <strong>Erasure</strong> — Settings → About → Delete account removes everything at once.
+          <strong>Erasure.</strong> Settings, then About, then Delete account removes everything at once.
         </li>
         <li>
-          <strong>Anything else</strong> — email
+          <strong>Anything else.</strong> Email
           <a href="mailto:privacy@kalmpass.net">privacy@kalmpass.net</a> and we will respond within
           30 days.
         </li>
@@ -173,7 +175,7 @@
       <p>
         If we suffer a breach affecting personal data we will notify the ICO within 72 hours where
         required, and tell affected users directly. Because vault contents are encrypted with keys we
-        do not hold, a breach of our systems would not expose them — but we will say plainly what
+        do not hold, a breach of our systems would not expose them, but we will say plainly what
         happened rather than minimise it.
       </p>
 
@@ -187,9 +189,9 @@
       </p>
     </main>
 
-    <footer>
-      <div class="shell foot">
-        <span>© 2026 KalmPass</span>
+    <footer class="colophon">
+      <div class="wrap">
+        <span>&copy; 2026 KalmPass</span>
         <nav>
           <a href="/security/">Security</a>
           <a href="/privacy/">Privacy</a>

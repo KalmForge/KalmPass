@@ -17,7 +17,7 @@
  * from it is not possible, so a fully compromised server still cannot read a
  * single item.
  *
- * Items are encrypted under a random vault key, which is wrapped twice — once by
+ * Items are encrypted under a random vault key, which is wrapped twice, once by
  * the master password's encryption key, once by the Recovery Key. Either opens
  * the vault; we hold neither. That is what makes account recovery possible
  * without anyone escrowing a key on the customer's behalf.
@@ -30,7 +30,7 @@ export const DEFAULT_KDF_ITERATIONS = 1_000_000;
 
 /**
  * The Recovery Key is 125 bits of uniform randomness, so it does not need the
- * master password's punishing round count to resist guessing — nothing can
+ * master password's punishing round count to resist guessing. Nothing can
  * enumerate that space regardless.
  */
 const RECOVERY_KDF_ITERATIONS = 200_000;
@@ -145,7 +145,7 @@ function randomInt(max) {
 }
 
 /**
- * 25 symbols of 5 bits — 125 bits of entropy, printed in groups of five. Far
+ * 25 symbols of 5 bits. 125 bits of entropy, printed in groups of five. Far
  * beyond brute force, and short enough to write on a card.
  */
 export function generateRecoveryKey() {
@@ -216,7 +216,7 @@ export async function unwrapVaultKey(encKey, blob) {
 
 /**
  * A fresh 96-bit IV per encryption. AES-GCM is catastrophically weak if an IV
- * repeats under the same key, so this must never be derived or counted — only
+ * repeats under the same key, so this must never be derived or counted, only
  * drawn from the CSPRNG.
  */
 async function encryptBytes(key, plaintext) {
@@ -244,7 +244,7 @@ async function decryptBytes(key, blob) {
  * Length-prefix, then pad out to a block boundary with random bytes.
  *
  * Without this, a stored blob's size would quietly leak how long a note or a
- * password is — enough, across a whole vault, to fingerprint what is in it.
+ * password is. Enough, across a whole vault, to fingerprint what is in it.
  */
 function pad(bytes) {
   const total = Math.ceil((bytes.length + 4) / PAD_BLOCK) * PAD_BLOCK;
@@ -272,8 +272,8 @@ export async function decryptItem(vaultKey, blob) {
 
 /**
  * Exports are encrypted under their own key, derived from a passphrase chosen at
- * export time. A backup file is therefore useless to anyone who finds it and —
- * unlike the live vault — it can still be restored if the instance is lost.
+ * export time. A backup file is therefore useless to anyone who finds it and,
+ * unlike the live vault, it can still be restored if the instance is lost.
  */
 export async function encryptBackup(passphrase, payload) {
   const salt = randomBytes(16);
@@ -326,7 +326,7 @@ export async function decryptBackup(passphrase, backup) {
 
 // --- misc -------------------------------------------------------------------
 
-/** SHA-1, uppercase hex — only ever used for the HIBP k-anonymity prefix. */
+/** SHA-1, uppercase hex, only ever used for the HIBP k-anonymity prefix. */
 export async function sha1Hex(text) {
   const digest = await crypto.subtle.digest("SHA-1", encoder.encode(text));
   return [...new Uint8Array(digest)]

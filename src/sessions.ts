@@ -19,7 +19,7 @@ const ABSOLUTE_MS = 12 * 60 * 60 * 1000;
 
 /**
  * `full` is an ordinary signed-in session. `recovery` is issued only by the
- * Recovery Key flow and may do exactly one thing — finish that flow. It can
+ * Recovery Key flow and may do exactly one thing. Finish that flow. It can
  * never read an item.
  */
 export type SessionScope = "full" | "recovery";
@@ -136,7 +136,7 @@ export async function trimSessionsToLimit(env: Env, user: UserRow): Promise<void
     .run();
 }
 
-/** Housekeeping — expired rows are useless and should not accumulate. */
+/** Housekeeping. Expired rows are useless and should not accumulate. */
 export async function purgeExpired(env: Env): Promise<void> {
   const now = Date.now();
   await env.DB.batch([

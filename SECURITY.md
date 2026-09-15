@@ -20,7 +20,7 @@ security headers, and the cryptographic design itself.
 
 Out of scope: findings that require a compromised device, missing headers on
 static marketing pages with no dynamic content, and the inherent trust placed in
-a web-delivered application — which is documented openly in the README.
+a web-delivered application, which is documented openly in the README.
 
 ## What we consider serious
 

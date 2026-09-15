@@ -3,41 +3,42 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Security — KalmPass</title>
+    <title>Security. KalmPass.</title>
     <meta
       name="description"
       content="Exactly how KalmPass encrypts your vault, what we store, what we can see, and what we cannot do for you."
     />
-    <meta name="theme-color" content="#071022" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://kalmpass.net/security/" />
     <link rel="stylesheet" href="/site.css" />
   </head>
   <body>
-    <header class="shell">
-      <nav class="nav">
-        <a class="nav-brand" href="/">
-          <img src="/icon.svg" alt="" width="32" height="32" />
+    <header class="masthead">
+      <div class="wrap">
+        <a class="wordmark" href="/">
+          <img src="/icon.svg" alt="" width="30" height="30" />
           KalmPass
         </a>
-        <div class="nav-links">
+        <nav>
           <a href="/#how">How it works</a>
           <a href="/#pricing">Pricing</a>
-          <a class="btn btn-ghost btn-sm" href="/app/">Sign in</a>
-        </div>
-      </nav>
+          <a href="/security/">Security</a>
+          <a class="btn btn-solid btn-small" href="/app/">Sign in</a>
+        </nav>
+      </div>
     </header>
 
-    <main class="prose">
+    <main class="doc">
       <h1>Security</h1>
       <p>
         Every password manager says it takes security seriously. This page gives you the specifics
-        instead — the exact algorithms, the exact parameters, and a complete account of what we hold
-        — so you can judge KalmPass on what it does rather than on what it claims.
+        instead: the exact algorithms, the exact parameters, and a complete account of what we hold.
+        Judge KalmPass on what it does rather than on what it claims.
       </p>
 
-      <div class="callout">
+      <div class="note caution">
         <strong>The short version</strong>
         <p>
           Your vault is encrypted in your browser before anything is sent. The key comes from your
@@ -75,7 +76,7 @@
       <p>
         The vault key itself is random and stable. Your master password wraps it rather than
         encrypting items directly, which is why changing your password takes a moment instead of
-        re-encrypting your whole vault — and why your Recovery Key keeps working afterwards.
+        re-encrypting your whole vault, and why your Recovery Key keeps working afterwards.
       </p>
 
       <h3>3. A second layer on our side</h3>
@@ -86,7 +87,7 @@
         record and replayed into another.
       </p>
       <p>
-        This layer is not what keeps <em>us</em> out — the client layer already does that. It is
+        This layer is not what keeps <em>us</em> out. The client layer already does that. It is
         there so that a leaked database backup, a stolen storage credential, or a subpoena served on
         the storage layer alone yields nothing readable at all.
       </p>
@@ -159,25 +160,25 @@
       <h2>Recovery, honestly</h2>
       <p>
         Zero-knowledge encryption and "email me a password reset" cannot both be true. If a server
-        can restore your vault from an email link, that server can read your vault — and so can
+        can restore your vault from an email link, then that server can read your vault, and so can
         anyone who breaks into it.
       </p>
       <p>
         KalmPass resolves this the way an emergency kit does. At signup you are issued a
         <strong>Recovery Key</strong>: 125 bits of randomness, printed in Crockford base32 so it
         cannot be misread. Your vault key is wrapped under it as well as under your master password.
-        Forget the password, use the key, set a new one — nothing is lost, and we still never held
+        Forget the password, use the key, set a new one. Nothing is lost, and we still never held
         anything that could open your vault.
       </p>
       <p>
         Using the Recovery Key issues a fresh one, because the old one has now been typed into a
         browser. You can also replace it at any time from Settings.
       </p>
-      <div class="callout">
+      <div class="note caution">
         <strong>If you lose both</strong>
         <p>
           There is nothing anyone can do. We can clear the account so the address can be used again,
-          but the data is unrecoverable — by us, by you, by anyone. This is the price of the
+          but the data is unrecoverable by us, by you, by anyone. This is the price of the
           guarantee, and we would rather state it plainly than bury it.
         </p>
       </div>
@@ -194,7 +195,7 @@
         </tr>
         <tr>
           <th>How many items you have</th>
-          <td>Yes — row counts are visible. Sizes are padded, so lengths are not.</td>
+          <td>Yes. Row counts are visible. Sizes are padded, so lengths are not.</td>
         </tr>
         <tr>
           <th>Your email address</th>
@@ -205,7 +206,7 @@
         </tr>
         <tr>
           <th>When you sign in, and from what kind of device</th>
-          <td>Yes — it is in your own activity log, encrypted at rest.</td>
+          <td>Yes. It is in your own activity log, encrypted at rest.</td>
         </tr>
         <tr>
           <th>Your master password or Recovery Key</th>
@@ -257,9 +258,9 @@
       <p class="faint">Last reviewed 15 September 2026.</p>
     </main>
 
-    <footer>
-      <div class="shell foot">
-        <span>© 2026 KalmPass</span>
+    <footer class="colophon">
+      <div class="wrap">
+        <span>&copy; 2026 KalmPass</span>
         <nav>
           <a href="/security/">Security</a>
           <a href="/privacy/">Privacy</a>
