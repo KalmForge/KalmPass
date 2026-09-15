@@ -166,8 +166,11 @@ being straight with you:
   cost; it does not rescue a guessable password.
 - **A malicious server operator.** We cannot decrypt what has already been sent,
   but in principle we could serve altered JavaScript in future. That risk is
-  inherent to every web-delivered password manager. It is why this code is small,
-  dependency-free and published — so the served page can be checked against it.
+  inherent to every web-delivered password manager. It is why this code ships no
+  third-party dependencies at all: there is no CDN, no analytics and no package
+  that could be compromised to change what runs in the browser. Making the
+  repository public would strengthen this further, by letting the served page be
+  checked against the source.
 - **Losing both the master password and the Recovery Key.** The data is then gone
   for good. That is the direct cost of nobody else holding a key.
 
