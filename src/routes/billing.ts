@@ -87,12 +87,27 @@ export async function checkout(env: Env, request: Request, session: Session): Pr
     allow_promotion_codes: "true",
     "metadata[user_id]": user.id,
     "subscription_data[metadata][user_id]": user.id,
+
+    // Turning Stripe Tax on in the dashboard does nothing on its own: the
+    // session has to ask for it. Without this line VAT is quietly not collected,
+    // which is only discovered at the first return.
+    "automatic_tax[enabled]": "true",
+    // Lets a business customer supply a VAT number, so an EU business is
+    // reverse charged rather than being charged VAT it would have to reclaim.
+    "tax_id_collection[enabled]": "true",
   };
 
   // Reusing the customer keeps one billing history per account rather than a new
   // customer record every time somebody opens the upgrade page.
-  if (customerId) params.customer = customerId;
-  else params.customer_email = email;
+  if (customerId) {
+    params.customer = customerId;
+    // Required alongside automatic tax on an existing customer: the address
+    // decides the rate, so Stripe has to be allowed to save what is entered.
+    params["customer_update[address]"] = "auto";
+    params["customer_update[name]"] = "auto";
+  } else {
+    params.customer_email = email;
+  }
 
   const checkoutSession = await stripe(env, "/checkout/sessions", params);
   return json({ url: checkoutSession.url });
