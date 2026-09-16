@@ -11,6 +11,8 @@ import * as store from "./store.js";
 import { isEmail } from "./validate.js";
 import { vault } from "./store.js";
 import { hasPlatformAuthenticator, isSupported } from "./passkey.js";
+import { APP_HOME, isNative, saveFile } from "./platform.js";
+import { biometryName } from "./settings.js";
 import { copy, guard, toast } from "./ui.js";
 import { openEditor, openGenerator, render, updateMeter, view } from "./vault-view.js";
 
@@ -61,13 +63,15 @@ async function start() {
   prefs.load();
 
   // Offered only where it can actually work, rather than dangled and then
-  // failing once the authenticator turns out not to support PRF.
-  if (isSupported() && (await hasPlatformAuthenticator())) {
+  // failing once the authenticator turns out not to support PRF. The apps
+  // have their own way in, through the phone's secure storage.
+  if (!isNative && isSupported() && (await hasPlatformAuthenticator())) {
     show($("#signin-passkey"), true);
   }
+  show($("#kit-print"), !isNative);
 
   const params = new URLSearchParams(location.search);
-  const clean = () => history.replaceState(null, "", "/app/");
+  const clean = () => history.replaceState(null, "", APP_HOME);
 
   try {
     instanceStatus = await api.status();
@@ -123,6 +127,18 @@ async function start() {
   }
 
   showAuthView(params.get("new") === "1" && instanceStatus.signupAllowed ? "signup" : "signin");
+
+  if (isNative) {
+    const device = await store.deviceUnlockStatus();
+    if (device.enabled) {
+      const button = $("#signin-device");
+      button.dataset.label = `Unlock with ${biometryName(device.biometry)}`;
+      button.textContent = button.dataset.label;
+      show(button, true);
+      // Opening the app is the request to unlock it, so ask straight away.
+      unlockWithDevice();
+    }
+  }
 }
 
 // --- sign in ----------------------------------------------------------------
@@ -204,6 +220,29 @@ $("#signin-passkey").addEventListener("click", async () => {
     button.textContent = "Unlock with a passkey";
   }
 });
+
+async function unlockWithDevice() {
+  const button = $("#signin-device");
+  const error = $("#signin-error");
+  error.hidden = true;
+  button.disabled = true;
+
+  try {
+    const outcome = await store.unlockWithDevice();
+    enterVault();
+    if (outcome?.devicesSignedOut > 0) {
+      const n = outcome.devicesSignedOut;
+      toast(`Signed out ${n} other device${n === 1 ? "" : "s"}.`);
+    }
+  } catch (err) {
+    if (err?.code !== "cancelled") fail(error, err.message ?? "That did not unlock the vault.");
+    if (/turned off/.test(err?.message ?? "")) show(button, false);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+$("#signin-device").addEventListener("click", unlockWithDevice);
 
 $("#signin-use-backup").addEventListener("click", () => {
   const label = $("#signin-totp-label");
@@ -317,12 +356,7 @@ $("#kit-download").addEventListener("click", () => {
     "",
   ].join("\n");
 
-  const url = URL.createObjectURL(new Blob([content], { type: "text/plain" }));
-  const link = el("a", { href: url, download: "kalmpass-emergency-kit.txt" });
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  guard(() => saveFile("kalmpass-emergency-kit.txt", content, "text/plain"))();
 });
 
 $("#kit-print").addEventListener("click", () => window.print());
@@ -489,7 +523,11 @@ function renderChrome() {
     show(banner, true);
   } else if (vault.planStatus === "past_due") {
     banner.replaceChildren(
-      el("span", { text: "Your last payment failed. Update your card to stay on Pro." }),
+      el("span", {
+        text: isNative
+          ? "Your last payment failed."
+          : "Your last payment failed. Update your card to stay on Pro.",
+      }),
       el("button", {
         class: "mini",
         type: "button",
@@ -499,6 +537,8 @@ function renderChrome() {
         }),
       }),
     );
+    // Payments are handled on the website, and the apps do not link to them.
+    if (isNative) banner.lastElementChild.remove();
     show(banner, true);
   } else {
     show(banner, false);

@@ -16,6 +16,7 @@ import {
   deriveRecoveryKeys,
   encryptBackup,
   encryptItem,
+  fromB64,
   generateRecoveryKey,
   derivePasskeyKeys,
   generateVaultKey,
@@ -25,6 +26,7 @@ import {
   unwrapVaultKey,
   wrapVaultKey,
 } from "./crypto.js";
+import { isNative, nativePlugin } from "./platform.js";
 
 const CONTENT_FIELDS = [
   "name",
@@ -97,6 +99,7 @@ export function onChange(listener) {
 
 const emit = () => {
   for (const listener of listeners) listener(vault);
+  if (!vault.locked) scheduleAutofillSync();
 };
 
 function adopt(account) {
@@ -240,21 +243,27 @@ export async function signOut() {
 export async function addPasskey(label) {
   const { createPasskey } = await import("./passkey.js");
   const { credentialId, secret } = await createPasskey(vault.email);
-  const { encKey, authKey } = await derivePasskeyKeys(secret);
-  secret.fill(0);
-
-  await api.addPasskey({
-    credentialId,
-    authKey,
-    wrappedKey: await wrapVaultKey(encKey, keys.vault),
-    label: label || "Passkey",
-  });
+  await registerSecret(credentialId, secret, label || "Passkey");
 }
 
-/** Signs in and opens the vault with a passkey, with nothing typed. */
-export async function unlockWithPasskey() {
-  const { usePasskey } = await import("./passkey.js");
-  const { credentialId, secret } = await usePasskey();
+/** Registers any 32-byte secret as a way into the vault. Returns the row id. */
+async function registerSecret(credentialId, secret, label) {
+  const { encKey, authKey } = await derivePasskeyKeys(secret);
+  secret.fill(0);
+  const wrappedKey = await wrapVaultKey(encKey, keys.vault);
+  const { id } = await api.addPasskey({ credentialId, authKey, wrappedKey, label });
+  return { id, wrappedKey };
+}
+
+/**
+ * Signs in and opens the vault with a passkey, with nothing typed.
+ *
+ * `source` produces the credential id and its secret. By default that is a
+ * WebAuthn passkey; the apps pass one that reads the phone's secure storage.
+ */
+export async function unlockWithPasskey(source) {
+  const read = source ?? (await import("./passkey.js")).usePasskey;
+  const { credentialId, secret } = await read();
   const { encKey, authKey } = await derivePasskeyKeys(secret);
   secret.fill(0);
 
@@ -268,6 +277,108 @@ export async function unlockWithPasskey() {
     devicesSignedOut: result.devicesSignedOut ?? 0,
     deviceLimit: result.deviceLimit ?? null,
   };
+}
+
+// --- unlocking with the phone ----------------------------------------------
+
+/**
+ * Face ID, Touch ID or a fingerprint, in the apps.
+ *
+ * This is a passkey in all but name. The app makes a random 32-byte secret,
+ * registers it with the server exactly as a WebAuthn passkey's PRF output is
+ * registered, and hands it to the operating system to keep behind biometrics:
+ * the Keychain on iOS, the Android Keystore on Android. The server stores what
+ * it stores for any passkey, a wrapped copy of the vault key and a verifier,
+ * and can open neither.
+ */
+const deviceVault = () => nativePlugin("KalmVault");
+
+export async function deviceUnlockStatus() {
+  const plugin = deviceVault();
+  if (!plugin) return { biometry: "none", enabled: false };
+  try {
+    return await plugin.status();
+  } catch {
+    return { biometry: "none", enabled: false };
+  }
+}
+
+export async function enableDeviceUnlock(label) {
+  const plugin = deviceVault();
+  if (!plugin) throw new Error("This needs the KalmPass app.");
+
+  const secret = randomBytes(32);
+  const credentialId = toB64(randomBytes(24)).replace(/\+/g, "-").replace(/\//g, "_");
+  const encoded = toB64(secret);
+  const { id, wrappedKey } = await registerSecret(credentialId, secret, label);
+
+  try {
+    // The phone asks for a face or fingerprint here. Cancelling it undoes the
+    // registration, so a half set up unlock never lingers on the account.
+    await plugin.enable({ credentialId, passkeyId: id, secret: encoded, wrappedKey });
+  } catch (error) {
+    await api.removePasskey(id).catch(() => {});
+    throw error;
+  }
+  scheduleAutofillSync(0);
+}
+
+export async function disableDeviceUnlock() {
+  const plugin = deviceVault();
+  if (!plugin) return;
+  const { passkeyId } = await plugin.status();
+  await plugin.disable();
+  if (passkeyId) await api.removePasskey(passkeyId).catch(() => {});
+}
+
+export async function unlockWithDevice() {
+  const plugin = deviceVault();
+  try {
+    return await unlockWithPasskey(async () => {
+      const { credentialId, secret } = await plugin.unlock({ reason: "Unlock your vault" });
+      return { credentialId, secret: fromB64(secret) };
+    });
+  } catch (error) {
+    // Removed from another device, or the account is gone: this phone's copy
+    // can never work again, so it is cleared rather than failing every time.
+    if (error instanceof ApiError && error.status === 401) {
+      await plugin.disable().catch(() => {});
+      throw new Error("Unlocking with this phone was turned off. Use your master password.");
+    }
+    throw error;
+  }
+}
+
+/**
+ * Autofill runs outside the app, in the system's own extension point, so it
+ * needs its own copy of the vault. It gets the ciphertext exactly as the server
+ * holds it, nothing decrypted, and opens it with the same biometric secret.
+ */
+let syncTimer = null;
+
+function scheduleAutofillSync(delay = 1500) {
+  if (!isNative) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncAutofill().catch(() => {}), delay);
+}
+
+async function syncAutofill() {
+  const plugin = deviceVault();
+  if (vault.locked || !plugin) return;
+  const { enabled } = await plugin.status();
+  if (!enabled) return;
+
+  const { items } = await api.listItems(0);
+  const live = items.filter((row) => !row.deletedAt);
+  await plugin.saveVault({
+    items: live.map((row) => ({ id: row.id, data: row.data })),
+    // For iOS, which lists matching logins above the keyboard before anything
+    // is unlocked. The site and username are shared with the system for that,
+    // never the password.
+    identities: vault.items
+      .filter((item) => !item.deletedAt && item.url && item.username)
+      .map((item) => ({ id: item.id, url: item.url, username: item.username })),
+  });
 }
 
 // --- recovery ---------------------------------------------------------------

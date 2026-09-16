@@ -192,6 +192,69 @@ const foreign = await call("/account/prelogin", {
   body: { email },
 });
 check("a foreign web origin is refused", foreign.status === 403, `status ${foreign.status}`);
+
+// --- the mobile apps ----------------------------------------------------------
+
+const APP = "capacitor://app.kalmpass.net";
+const preflight = await fetch(`${BASE}/api/items`, {
+  method: "OPTIONS",
+  headers: {
+    origin: APP,
+    "access-control-request-method": "PUT",
+    "access-control-request-headers": "authorization, content-type",
+  },
+});
+check("the iOS app's preflight is answered",
+  preflight.status === 204 && preflight.headers.get("access-control-allow-origin") === APP,
+  `status ${preflight.status}`);
+check("without allowing credentials",
+  preflight.headers.get("access-control-allow-credentials") === null);
+
+const strangerPreflight = await fetch(`${BASE}/api/items`, {
+  method: "OPTIONS",
+  headers: { origin: "https://evil.example", "access-control-request-method": "PUT" },
+});
+check("a stranger's preflight is not",
+  strangerPreflight.headers.get("access-control-allow-origin") === null,
+  `status ${strangerPreflight.status}`);
+
+const appPrelogin = await fetch(`${BASE}/api/account/prelogin`, {
+  method: "POST",
+  headers: { origin: "https://app.kalmpass.net", "content-type": "application/json" },
+  body: JSON.stringify({ email }),
+});
+check("the Android app can reach the API",
+  appPrelogin.status === 200 &&
+    appPrelogin.headers.get("access-control-allow-origin") === "https://app.kalmpass.net",
+  `status ${appPrelogin.status}`);
+
+
+const tokenSignupEmail = `smoke-token-${Date.now()}@kalmpass.invalid`;
+const tokenAccount = await accountKeys(password, tokenSignupEmail);
+const tokenRecovery = await recoveryKeys(recoveryKey(), tokenSignupEmail);
+const tokenSignup = await call("/account/signup", {
+  method: "POST",
+  origin: APP,
+  body: {
+    email: tokenSignupEmail,
+    authKey: tokenAccount.authKey,
+    kdfIterations: KDF_ITERATIONS,
+    protectedKey: await encryptBytes(tokenAccount.encKey, rawVaultKey),
+    recoveryWrap: await encryptBytes(tokenRecovery.encKey, rawVaultKey),
+    recoveryAuthKey: tokenRecovery.authKey,
+    tokenAuth: true,
+  },
+});
+check("an app signup gets a token", tokenSignup.status === 201 && Boolean(tokenSignup.payload?.token),
+  `status ${tokenSignup.status}`);
+if (tokenSignup.payload?.token) {
+  const gone = await call("/account", {
+    method: "DELETE",
+    token: tokenSignup.payload.token,
+    body: { currentAuthKey: tokenAccount.authKey, confirm: "DELETE" },
+  });
+  check("and that account is deleted again", gone.status === 200, `status ${gone.status}`);
+}
 check("login does not also set a cookie", !login.payload?.cookie);
 
 const unwrapped = await crypto.subtle.importKey(
@@ -277,9 +340,19 @@ check("and the arriving device is told", fourth.devicesSignedOut === 1,
   `reported ${fourth.devicesSignedOut}`);
 check("with the plan limit alongside it", fourth.deviceLimit === 3, `reported ${fourth.deviceLimit}`);
 
+// Last, because signing in again as the same device replaces that session.
+const appLogin = await fetch(`${BASE}/api/account/login`, {
+  method: "POST",
+  headers: { origin: "capacitor://app.kalmpass.net", "content-type": "application/json" },
+  body: JSON.stringify({ email, authKey: account.authKey, tokenAuth: true, deviceId: "smokedeviceDDDD" }),
+});
+const appLoginBody = await appLogin.json();
+check("an app sign-in gets a token and no cookie",
+  Boolean(appLoginBody.token) && appLogin.headers.get("set-cookie") === null);
+
 const removed = await call("/account", {
   method: "DELETE",
-  token: fourth.token,
+  token: appLoginBody.token ?? fourth.token,
   body: { currentAuthKey: account.authKey, confirm: "DELETE" },
 });
 check("account deleted", removed.status === 200, `status ${removed.status}`);

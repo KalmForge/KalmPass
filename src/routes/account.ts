@@ -226,9 +226,25 @@ export async function signup(env: Env, request: Request, ctx: ExecutionContext):
     "full",
     await deviceIndexOf(env, optionalDeviceId(body)),
   );
+  // The website gets a cookie. The extension and the apps cannot use one, so
+  // they ask for the token in the body instead, as they do at sign-in.
+  const wantsToken = body["tokenAuth"] === true;
   return json(
-    { ok: true, email, kdfIterations, totpEnabled: false, emailVerified: false, plan: "free" },
-    { status: 201, headers: { "set-cookie": sessionCookie(sessionToken, SESSION_MAX_AGE) } },
+    {
+      ok: true,
+      email,
+      kdfIterations,
+      totpEnabled: false,
+      emailVerified: false,
+      plan: "free",
+      ...(wantsToken ? { token: sessionToken } : {}),
+    },
+    {
+      status: 201,
+      ...(wantsToken
+        ? {}
+        : { headers: { "set-cookie": sessionCookie(sessionToken, SESSION_MAX_AGE) } }),
+    },
   );
 }
 
@@ -562,13 +578,15 @@ export async function recover(env: Env, request: Request): Promise<Response> {
   // A recovery-scoped session can do exactly one thing: finish the recovery. It
   // cannot read items, change billing, or touch the second factor.
   const { token } = await createSession(env, user.id, request, "recovery");
+  const wantsToken = body["tokenAuth"] === true;
   return json(
     {
       ok: true,
       email: await open(env, user.email_enc, `user.email:${user.id}`),
       recoveryWrap: await open(env, user.recovery_wrap, `user.recovery_wrap:${user.id}`),
+      ...(wantsToken ? { token } : {}),
     },
-    { headers: { "set-cookie": sessionCookie(token, 30 * 60) } },
+    wantsToken ? {} : { headers: { "set-cookie": sessionCookie(token, 30 * 60) } },
   );
 }
 

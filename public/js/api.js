@@ -1,5 +1,13 @@
 /** Thin wrapper over fetch. Everything it sends is already ciphertext. */
 
+import { API_ORIGIN, isNative } from "./platform.js";
+
+/**
+ * The apps cannot use the session cookie, so they hold the session token here,
+ * in memory only, as the browser extension does. Closing the app ends it.
+ */
+let bearer = null;
+
 export class ApiError extends Error {
   constructor(status, code, message, extra = {}) {
     super(message);
@@ -12,13 +20,16 @@ export class ApiError extends Error {
 async function request(method, path, body) {
   let response;
   try {
-    response = await fetch(`/api${path}`, {
+    response = await fetch(`${API_ORIGIN}/api${path}`, {
       method,
-      headers: body === undefined ? {} : { "content-type": "application/json" },
+      headers: {
+        ...(body === undefined ? {} : { "content-type": "application/json" }),
+        ...(bearer ? { authorization: `Bearer ${bearer}` } : {}),
+      },
       body: body === undefined ? undefined : JSON.stringify(body),
       // The session cookie is HttpOnly and SameSite=Strict; this is here to be
-      // explicit that credentials never go anywhere else.
-      credentials: "same-origin",
+      // explicit that credentials never go anywhere else. The apps send none.
+      credentials: isNative ? "omit" : "same-origin",
       cache: "no-store",
       redirect: "error",
     });
@@ -42,12 +53,38 @@ async function request(method, path, body) {
   return payload;
 }
 
+/**
+ * Calls that start a session. In the apps they ask for the token in the reply
+ * and keep it; on the website the server sets the cookie as before.
+ */
+const opensSession = (path) => async (body) => {
+  const reply = await request("POST", path, isNative ? { ...body, tokenAuth: true } : body);
+  if (reply?.token) {
+    bearer = reply.token;
+    delete reply.token;
+  }
+  return reply;
+};
+
+/** Calls that end the session they were made with. */
+const closesSession = (method, path) => async (body) => {
+  try {
+    return await request(method, path, body);
+  } finally {
+    bearer = null;
+  }
+};
+
 export const api = {
+  forgetToken: () => {
+    bearer = null;
+  },
+
   status: () => request("GET", "/account/status"),
   prelogin: (email) => request("POST", "/account/prelogin", { email }),
-  signup: (body) => request("POST", "/account/signup", body),
-  login: (body) => request("POST", "/account/login", body),
-  logout: () => request("POST", "/account/logout"),
+  signup: opensSession("/account/signup"),
+  login: opensSession("/account/login"),
+  logout: closesSession("POST", "/account/logout"),
   me: () => request("GET", "/account"),
 
   verifyEmail: (token) => request("POST", "/account/verify", { token }),
@@ -55,17 +92,17 @@ export const api = {
 
   rekey: (body) => request("POST", "/account/rekey", body),
   changeEmail: (body) => request("POST", "/account/email", body),
-  recover: (body) => request("POST", "/account/recover", body),
-  recoverComplete: (body) => request("POST", "/account/recover/complete", body),
+  recover: opensSession("/account/recover"),
+  recoverComplete: closesSession("POST", "/account/recover/complete"),
   rotateRecoveryKey: (body) => request("POST", "/account/recovery-key/rotate", body),
   resetRequest: (email) => request("POST", "/account/reset/request", { email }),
   resetConfirm: (body) => request("POST", "/account/reset/confirm", body),
-  deleteAccount: (body) => request("DELETE", "/account", body),
+  deleteAccount: closesSession("DELETE", "/account"),
 
   passkeys: () => request("GET", "/account/passkeys"),
   addPasskey: (body) => request("POST", "/account/passkeys", body),
   removePasskey: (id) => request("DELETE", `/account/passkeys/${id}`),
-  passkeyLogin: (body) => request("POST", "/account/passkey-login", body),
+  passkeyLogin: opensSession("/account/passkey-login"),
 
   totpStart: () => request("POST", "/account/totp/start"),
   totpEnable: (code) => request("POST", "/account/totp/enable", { code }),

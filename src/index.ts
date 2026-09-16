@@ -33,6 +33,31 @@ import { type Session, purgeExpired, resolveSession } from "./sessions";
  */
 const EXTENSION_ORIGIN = new RegExp("^(chrome-extension|moz-extension|safari-web-extension)://[A-Za-z0-9._-]+$");
 
+/**
+ * The mobile apps. Capacitor serves the app from these origins inside the
+ * WebView: https on Android, its own scheme on iOS. Both use bearer tokens,
+ * never the cookie, so CORS is granted to them without credentials.
+ */
+const APP_ORIGINS = new Set(["https://app.kalmpass.net", "capacitor://app.kalmpass.net"]);
+
+function corsHeaders(origin: string): Record<string, string> {
+  return {
+    "access-control-allow-origin": origin,
+    "access-control-allow-methods": "GET, POST, PUT, DELETE",
+    "access-control-allow-headers": "authorization, content-type",
+    "access-control-max-age": "600",
+    vary: "Origin",
+  };
+}
+
+function withCors(response: Response, origin: string): Response {
+  const headers = new Headers(response.headers);
+  for (const [k, v] of Object.entries(corsHeaders(origin))) headers.set(k, v);
+  // A cookie has no business going to an app that cannot use it.
+  headers.delete("set-cookie");
+  return new Response(response.body, { status: response.status, headers });
+}
+
 function assertSameOrigin(request: Request, url: URL): void {
   if (request.method === "GET" || request.method === "HEAD") return;
   if (url.pathname === "/api/billing/webhook") return;
@@ -44,7 +69,7 @@ function assertSameOrigin(request: Request, url: URL): void {
   // The browser extensions sign in from their own origin. A web page cannot
   // claim one of these schemes, and the extensions send no cookie, so there is
   // nothing for a forged request to ride on.
-  if (EXTENSION_ORIGIN.test(origin)) return;
+  if (EXTENSION_ORIGIN.test(origin) || APP_ORIGINS.has(origin)) return;
   if (origin !== url.origin) {
     throw new HttpError(403, "bad_origin", "Cross-origin requests are not accepted.");
   }
@@ -177,6 +202,15 @@ export default {
     // ever changes, fall through to the static site rather than 404.
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
 
+    const origin = request.headers.get("origin") ?? "";
+    const app = APP_ORIGINS.has(origin);
+    if (request.method === "OPTIONS") {
+      return app
+        ? new Response(null, { status: 204, headers: corsHeaders(origin) })
+        : new Response(null, { status: 405 });
+    }
+    const respond = (response: Response) => (app ? withCors(response, origin) : response);
+
     try {
       assertSameOrigin(request, url);
       const response = await route(request, env, ctx, url);
@@ -184,9 +218,9 @@ export default {
       // Expired rows are dead weight; clear them on the way out occasionally
       // rather than making anybody wait for it.
       if (Math.random() < 0.02) ctx.waitUntil(purgeExpired(env).catch(() => {}));
-      return response;
+      return respond(response);
     } catch (err) {
-      return errorResponse(err);
+      return respond(errorResponse(err));
     }
   },
 

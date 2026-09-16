@@ -4,6 +4,7 @@ import { api } from "./api.js";
 import { el, relativeTime } from "./dom.js";
 import { crackTime, estimateStrength, generatePassphrase } from "./generator.js";
 import { analyse, breachCheck } from "./health.js";
+import { APP_HOME, isNative, platform, saveFile } from "./platform.js";
 import * as store from "./store.js";
 import { vault } from "./store.js";
 import {
@@ -167,7 +168,7 @@ const PANELS = {
         : "Adds a second factor to signing in, so a stolen master password is not enough on its own.",
     ),
 
-    passkeySection(refresh),
+    isNative ? deviceUnlockSection(refresh) : passkeySection(refresh),
 
     section(
       "Auto-lock",
@@ -541,6 +542,65 @@ function passkeySection(refresh) {
   return container;
 }
 
+/** What the phone calls its biometrics, for labels. */
+export function biometryName(kind) {
+  const names = { faceId: "Face ID", touchId: "Touch ID", opticId: "Optic ID" };
+  return names[kind] ?? (platform === "android" ? "your fingerprint" : "biometrics");
+}
+
+/**
+ * The apps' equivalent of passkeys: unlock with the phone's own biometrics,
+ * and let the system's autofill use the vault.
+ */
+function deviceUnlockSection(refresh) {
+  const container = el("div", { class: "finding" }, [
+    el("h3", { text: "Unlock with this phone" }),
+    el("p", { class: "faint m0", text: "Loading." }),
+  ]);
+
+  store.deviceUnlockStatus().then((device) => {
+    const name = biometryName(device.biometry);
+    const unavailable = device.biometry === "none";
+
+    const toggle = el("button", {
+      class: device.enabled ? "ghost" : "primary",
+      type: "button",
+      disabled: unavailable && !device.enabled,
+      text: device.enabled ? "Turn off" : `Use ${name}`,
+      onClick: guard(async () => {
+        const done = busy(toggle, "One moment...");
+        try {
+          if (device.enabled) {
+            await store.disableDeviceUnlock();
+            toast("This phone no longer unlocks your vault");
+          } else {
+            await store.enableDeviceUnlock(`${platform === "ios" ? "iPhone" : "Android"} app`);
+            toast(`${name} will unlock your vault`);
+          }
+          refresh();
+        } catch (error) {
+          if (error?.code !== "cancelled") throw error;
+        } finally {
+          done();
+        }
+      }),
+    });
+
+    container.replaceChildren(
+      el("h3", { text: "Unlock with this phone" }),
+      el("p", {
+        class: "faint m0",
+        text: unavailable && !device.enabled
+          ? "Set up a fingerprint or face unlock in your phone's settings to use this."
+          : `Open your vault with ${name} instead of your master password, and fill logins in other apps. The key stays in your phone's secure hardware. Your master password is still needed after a restart of the phone if the system asks for it.`,
+      }),
+      toggle,
+    );
+  });
+
+  return container;
+}
+
 /** A name for the device being registered, so the list is readable later. */
 function deviceLabel() {
   const agent = navigator.userAgent;
@@ -756,6 +816,36 @@ async function disableTotp(refresh) {
 function planPanel(refresh) {
   const pro = vault.plan === "pro";
   const status = vault.planStatus;
+
+  // The stores require their own billing for anything sold inside an app, so
+  // the apps show the plan and leave changing it to the website.
+  if (isNative) {
+    return el("div", { class: "stack" }, [
+      el("div", { class: "finding" }, [
+        el("div", { class: "health-score" }, [
+          el("div", { class: "plan-mark", dataset: { plan: vault.plan }, text: pro ? "Pro" : "Free" }),
+          el("div", {}, [
+            el("h3", { text: pro ? "You are on Pro" : "You are on the Free plan" }),
+            el("p", {
+              class: "faint m0",
+              text: pro && vault.planPeriodEnd
+                ? `Renews ${new Date(vault.planPeriodEnd).toLocaleDateString()}.`
+                : "Plan changes made elsewhere show up here.",
+            }),
+          ]),
+        ]),
+      ]),
+      el("button", {
+        class: "link",
+        type: "button",
+        text: "Refresh plan status",
+        onClick: guard(async () => {
+          await store.refreshAccount();
+          refresh();
+        }),
+      }),
+    ]);
+  }
 
   const children = [
     el("div", { class: "finding" }, [
@@ -995,7 +1085,7 @@ function devicesPanel(refresh) {
             // Locking only drops the keys from memory. Signing out also ends the
             // server session, which is what someone on a shared machine means.
             await store.signOut();
-            location.href = "/app/";
+            location.href = APP_HOME;
           }),
         }),
         el("button", {
@@ -1126,7 +1216,7 @@ function exportBackup() {
           const done = busy(go, "Encrypting…");
           try {
             const backup = await store.exportBackup(passphrase.value);
-            download(
+            await download(
               `kalmpass-backup-${new Date().toISOString().slice(0, 10)}.json`,
               JSON.stringify(backup, null, 2),
               "application/json",
@@ -1304,11 +1394,7 @@ async function deleteVault() {
 // --- helpers ----------------------------------------------------------------
 
 function download(filename, content, type) {
-  const url = URL.createObjectURL(new Blob([content], { type }));
-  const link = el("a", { href: url, download: filename });
-  document.body.append(link);
-  link.click();
-  link.remove();
-  // Revoked promptly so the blob, which holds vault data. Is not left alive.
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return saveFile(filename, content, type).catch((error) => {
+    toast(error?.message ?? "Could not save the file.", "bad");
+  });
 }
