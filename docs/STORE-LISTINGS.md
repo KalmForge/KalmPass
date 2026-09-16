@@ -38,7 +38,7 @@ This writes `dist/kalmpass-chrome-<version>.zip` and
 > and that the connection is encrypted, and asks you first if not.
 >
 > You need a KalmPass account, free at kalmpass.net. The code is open source at
-> github.com/KalmForge/KalmPass.
+> github.com/KalmPass/KalmPass.
 
 ### Chrome Web Store: privacy practices
 
@@ -71,7 +71,7 @@ collection in the manifest (authentication information and personally
 identifying information, both needed to sign in). The reviewer notes can say:
 
 > The source is the same as the package: no bundler, no minification. It is
-> also public at https://github.com/KalmForge/KalmPass under `extension/`,
+> also public at https://github.com/KalmPass/KalmPass under `extension/`,
 > built with `npm run ext:build`.
 
 Choose **On this site** to list it publicly, or **On your own** for an
