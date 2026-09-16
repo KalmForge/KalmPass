@@ -1,0 +1,25 @@
+{
+  "name": "kalm-vault",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Biometric vault unlock and autofill storage for the KalmPass apps. Native only: the app calls it through Capacitor.registerPlugin.",
+  "author": "KalmForge",
+  "license": "AGPL-3.0-only",
+  "files": [
+    "android/src/main/",
+    "android/build.gradle",
+    "ios/Sources",
+    "Package.swift"
+  ],
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  }
+}

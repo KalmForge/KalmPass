@@ -236,7 +236,7 @@ async function unlockWithDevice() {
     }
   } catch (err) {
     if (err?.code !== "cancelled") fail(error, err.message ?? "That did not unlock the vault.");
-    if (/turned off/.test(err?.message ?? "")) show(button, false);
+    if (err?.code === "invalidated" || /turned off/.test(err?.message ?? "")) show(button, false);
   } finally {
     button.disabled = false;
   }

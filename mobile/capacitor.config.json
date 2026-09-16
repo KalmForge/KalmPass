@@ -1,0 +1,19 @@
+{
+  "appId": "net.kalmpass.app",
+  "appName": "KalmPass",
+  "webDir": "www",
+  "server": {
+    "hostname": "app.kalmpass.net",
+    "androidScheme": "https",
+    "iosScheme": "capacitor"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false,
+    "webContentsDebuggingEnabled": false
+  }
+}

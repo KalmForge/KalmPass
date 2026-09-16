@@ -1,0 +1,26 @@
+{
+  "name": "kalmpass-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The KalmPass iOS and Android apps. The web app, packaged by Capacitor, plus native unlock and autofill.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "web": "node scripts/build-web.mjs",
+    "sync": "npm run web && cap sync",
+    "android": "npm run sync && cap open android",
+    "ios": "npm run sync && cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/browser": "8.0.4",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/filesystem": "8.1.3",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/share": "8.0.1",
+    "kalm-vault": "file:plugins/kalm-vault"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2"
+  }
+}

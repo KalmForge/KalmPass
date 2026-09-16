@@ -545,7 +545,7 @@ function passkeySection(refresh) {
 /** What the phone calls its biometrics, for labels. */
 export function biometryName(kind) {
   const names = { faceId: "Face ID", touchId: "Touch ID", opticId: "Optic ID" };
-  return names[kind] ?? (platform === "android" ? "your fingerprint" : "biometrics");
+  return names[kind] ?? (platform === "android" ? "fingerprint or face" : "biometrics");
 }
 
 /**
@@ -586,6 +586,8 @@ function deviceUnlockSection(refresh) {
       }),
     });
 
+    const autofill = device.enabled ? autofillRow() : null;
+
     container.replaceChildren(
       el("h3", { text: "Unlock with this phone" }),
       el("p", {
@@ -595,10 +597,52 @@ function deviceUnlockSection(refresh) {
           : `Open your vault with ${name} instead of your master password, and fill logins in other apps. The key stays in your phone's secure hardware. Your master password is still needed after a restart of the phone if the system asks for it.`,
       }),
       toggle,
+      autofill,
     );
   });
 
   return container;
+}
+
+/**
+ * Filling logins in other apps and in the browser. The system has to be told
+ * to use KalmPass, which only the person can do, in the phone's settings.
+ */
+function autofillRow() {
+  const plugin = window.Capacitor?.Plugins?.KalmVault;
+  const row = el("div", { class: "stack" });
+  if (!plugin) return row;
+
+  plugin.autofillStatus().then(({ supported, enabled }) => {
+    if (!supported) return;
+
+    const steps =
+      platform === "ios"
+        ? "In Settings, open General, then AutoFill & Passwords, and turn on KalmPass."
+        : "Choose KalmPass as your autofill service when your phone asks.";
+
+    const button = el("button", {
+      class: "ghost",
+      type: "button",
+      text: "Open settings",
+      onClick: guard(async () => {
+        const { opened } = await plugin.openAutofillSettings();
+        if (!opened) toast(steps);
+      }),
+    });
+
+    row.replaceChildren(
+      el("p", {
+        class: "faint m0",
+        text: enabled
+          ? "Autofill is on. Logins fill in other apps and browsers after a biometric check."
+          : `To fill logins in other apps and in Safari or Chrome: ${steps}`,
+      }),
+      enabled ? null : button,
+    );
+  });
+
+  return row;
 }
 
 /** A name for the device being registered, so the list is readable later. */

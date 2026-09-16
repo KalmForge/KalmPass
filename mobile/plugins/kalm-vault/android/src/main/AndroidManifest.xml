@@ -1,0 +1,30 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <application>
+        <!--
+          Offered in Settings as an autofill service. Android only binds it once
+          the person picks KalmPass there, and only the system may bind it.
+        -->
+        <service
+            android:name="net.kalmpass.vault.KalmAutofillService"
+            android:exported="true"
+            android:label="KalmPass"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.autofill"
+                android:resource="@xml/kalm_autofill_service" />
+        </service>
+
+        <activity
+            android:name="net.kalmpass.vault.AutofillUnlockActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@style/KalmPass.Autofill" />
+    </application>
+</manifest>

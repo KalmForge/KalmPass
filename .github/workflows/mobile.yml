@@ -1,0 +1,100 @@
+name: Mobile
+
+# Builds both apps on every change that could affect them, so a native
+# compile error is caught here rather than on somebody's Mac. The builds are
+# unsigned: signing and store uploads need the developer accounts.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - "public/js/**"
+      - "public/app/**"
+      - "public/app.css"
+      - ".github/workflows/mobile.yml"
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "public/js/**"
+      - "public/app/**"
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - run: npm ci
+
+      - name: Copy the web app and sync plugins
+        run: npm run sync -- android
+
+      - name: Build the debug APK
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kalmpass-android-debug
+          path: mobile/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - run: npm ci
+
+      - name: Copy the web app and sync plugins
+        run: npm run sync -- ios
+
+      - name: Add the AutoFill extension target
+        run: |
+          gem list -i xcodeproj >/dev/null || sudo gem install xcodeproj
+          ruby scripts/add-autofill-target.rb
+
+      - name: Build for the simulator
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
