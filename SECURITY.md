@@ -15,8 +15,9 @@ a good-faith report with legal threats.
 
 ## Scope
 
-In scope: the Worker (`src/`), the client (`public/js/`), the schema, the
-security headers, and the cryptographic design itself.
+In scope: the Worker (`src/`), the client (`public/js/`), the browser
+extension (`extension/`), the phone apps (`mobile/`), the schema, the security
+headers, and the cryptographic design itself.
 
 Out of scope: findings that require a compromised device, missing headers on
 static marketing pages with no dynamic content, and the inherent trust placed in

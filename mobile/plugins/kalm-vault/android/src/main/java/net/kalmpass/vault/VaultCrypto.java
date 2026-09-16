@@ -1,11 +1,12 @@
 package net.kalmpass.vault;
 
-import android.util.Base64;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import javax.crypto.Cipher;
@@ -22,7 +23,11 @@ import org.json.JSONObject;
  * Decrypt only, from a passkey-style secret: HKDF for the encryption key,
  * AES-GCM to unwrap the vault key and open items, and the length prefix that
  * item padding adds. Formats are the web app's exactly.
+ *
+ * Plain Java at runtime, with no Android APIs, so the unit test can check it
+ * against vectors made by the web code on an ordinary JVM.
  */
+@androidx.annotation.RequiresApi(api = android.os.Build.VERSION_CODES.O)
 final class VaultCrypto {
 
     /** Must match derivePasskeyKeys in crypto.js. */
@@ -71,7 +76,7 @@ final class VaultCrypto {
 
     /** base64(iv || ciphertext || tag), as encryptBytes writes it. */
     static byte[] open(byte[] key, String blob) throws GeneralSecurityException {
-        byte[] raw = Base64.decode(blob, Base64.DEFAULT);
+        byte[] raw = Base64.getDecoder().decode(blob);
         if (raw.length < 12 + 16) throw new GeneralSecurityException("Ciphertext is too short.");
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         cipher.init(
@@ -92,7 +97,7 @@ final class VaultCrypto {
     /** Opens every login it can. One unreadable item does not stop the rest. */
     static List<Login> decryptVault(String secretBase64, String wrappedKey, String itemsJson)
         throws GeneralSecurityException, JSONException {
-        byte[] secret = Base64.decode(secretBase64, Base64.DEFAULT);
+        byte[] secret = Base64.getDecoder().decode(secretBase64);
         byte[] unwrapKey = hkdf(secret, PASSKEY_LABEL + "/enc");
         byte[] vaultKey = open(unwrapKey, wrappedKey);
         Arrays.fill(secret, (byte) 0);
@@ -116,7 +121,7 @@ final class VaultCrypto {
                         content.optString("url", "")
                     )
                 );
-            } catch (GeneralSecurityException | JSONException unreadable) {
+            } catch (GeneralSecurityException | JSONException | IllegalArgumentException unreadable) {
                 // Skipped, as the web app does.
             }
         }
@@ -129,7 +134,12 @@ final class VaultCrypto {
     static String hostOf(String value) {
         if (value == null || value.isEmpty()) return null;
         String text = value.contains("://") ? value : "https://" + value;
-        String host = android.net.Uri.parse(text).getHost();
+        String host;
+        try {
+            host = new URI(text).getHost();
+        } catch (java.net.URISyntaxException malformed) {
+            return null;
+        }
         if (host == null || host.isEmpty()) return null;
         host = host.toLowerCase(Locale.ROOT);
         return host.startsWith("www.") ? host.substring(4) : host;

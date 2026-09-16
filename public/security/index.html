@@ -179,6 +179,29 @@
         leaves your device in a form anyone else can use.
       </p>
 
+      <h2>The extension and the phone apps</h2>
+      <p>
+        The browser extension decrypts inside the extension, with the same code as this site. Out
+        of the box it can reach kalmpass.net and nothing else, so it runs nothing on the pages you
+        visit until you press Fill. Before filling, it checks the page is the site the login was
+        saved for and that the connection is encrypted, and asks you first if either is not. If you
+        turn on save offers, a small script watches login forms so it can offer to save what you
+        type. A page can use that script to suggest a login for itself and for nothing else: it
+        cannot ask the extension for a password or a list of your logins.
+      </p>
+      <p>
+        The iPhone and Android apps are this web app, packaged, so the encryption is identical.
+        Unlocking with Face ID, Touch ID or a fingerprint works like a passkey. The app makes a
+        random key, registers it with us the way a passkey is registered, and gives it to your
+        phone's secure hardware to keep. The phone releases it only after a biometric check, every
+        time, and destroys it if a new face or fingerprint is added to the phone.
+      </p>
+      <p>
+        Filling passwords into other apps uses a copy of your vault on the phone, encrypted exactly
+        as we store it, and opened only after that same check. On iPhone, the name of each site and
+        its username are given to iOS so it can suggest them above the keyboard. Passwords are not.
+      </p>
+
       <h2>Recovery, honestly</h2>
       <p>
         Zero-knowledge encryption and "email me a password reset" cannot both be true. If a server

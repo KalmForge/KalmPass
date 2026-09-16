@@ -9,7 +9,8 @@
     "android/src/main/",
     "android/build.gradle",
     "ios/Sources",
-    "Package.swift"
+    "Package.swift",
+    "test-vectors.json"
   ],
   "peerDependencies": {
     "@capacitor/core": ">=8.0.0"

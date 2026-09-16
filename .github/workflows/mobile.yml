@@ -50,11 +50,11 @@ jobs:
       - name: Copy the web app and sync plugins
         run: npm run sync -- android
 
-      - name: Build the debug APK
+      - name: Check the Java crypto against the web app, and build the debug APK
         working-directory: mobile/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew :kalm-vault:testDebugUnitTest assembleDebug --no-daemon --stacktrace
 
       - uses: actions/upload-artifact@v4
         with:
@@ -81,6 +81,12 @@ jobs:
 
       - name: Copy the web app and sync plugins
         run: npm run sync -- ios
+
+      - name: Check the Swift crypto against the web app
+        working-directory: mobile/plugins/kalm-vault
+        run: |
+          swiftc -O ios/Sources/KalmVaultCore/*.swift ios/VectorCheck/main.swift -o "$RUNNER_TEMP/vector-check"
+          "$RUNNER_TEMP/vector-check" test-vectors.json
 
       - name: Add the AutoFill extension target
         run: |

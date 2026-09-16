@@ -119,10 +119,62 @@ any of them. `npm run smoke` and `npm run ext:test` both sign in that way.
 `extension/lib/` holds copies of the crypto modules, since an extension cannot
 import from the website. `npm run lint:libs` fails the build if they drift.
 
+## The phone apps
+
+`mobile/` is a Capacitor 8 project that packages the web app for iOS and
+Android, plus the parts a WebView cannot do:
+
+- **Unlock with Face ID, Touch ID or a fingerprint.** `mobile/plugins/kalm-vault`
+  keeps a random 32-byte secret in the Keychain or the Android Keystore, bound
+  to strong biometrics and invalidated when enrolment changes. The server
+  knows it as a passkey, so no new endpoints were needed.
+- **Autofill in other apps and browsers.** An iOS AutoFill credential provider
+  extension (`mobile/ios/App/AutoFill`) and an Android autofill service read
+  the vault as the server stores it, ask for a biometric check, and decrypt in
+  memory with small Swift and Java ports of the web app's HKDF and AES-GCM.
+- **No in-app purchases.** The stores require their own billing for anything
+  sold in an app, so the apps show the plan and do not sell one.
+
+The apps talk to `https://kalmpass.net` from their own origins
+(`capacitor://app.kalmpass.net` on iOS, `https://app.kalmpass.net` on
+Android). The Worker grants those two CORS without credentials, and the apps
+authenticate with a bearer token held in memory.
+
+```
+cd mobile
+npm ci
+npm run android     # copies the web app, syncs, opens Android Studio
+npm run ios         # the same for Xcode, on a Mac
+```
+
+On a Mac, once, before the first iOS build:
+
+```
+ruby scripts/add-autofill-target.rb   # adds the AutoFill extension target
+```
+
+Then in Xcode, set your team on both targets, and add the **App Groups**
+(`group.net.kalmpass`), **Keychain Sharing** (`net.kalmpass.shared`) and
+**AutoFill Credential Provider** capabilities to both. The entitlements files
+already name them; Xcode needs your team to register them.
+
+The **Mobile** workflow builds both apps unsigned on every change, so native
+compile errors show up in CI. Store builds need signing:
+
+- **Android:** create an upload keystore, add a `release` signing config, and
+  `./gradlew bundleRelease` for Google Play.
+- **iOS:** an Apple Developer account, then Archive in Xcode and upload with
+  the Organizer or Transporter.
+
+`npm run icons` in the repository root redraws the app icons and launch
+screens from the mark.
+
 ## Repository layout
 
 ```
 src/                  the Worker, no runtime dependencies
+mobile/               the iOS and Android apps (Capacitor, plus native unlock and autofill)
+docs/AUDIT.md         the brief to send to security audit firms
   index.ts            router; the only entry point
   crypto.ts           hashing, random, constant-time compare
   serverkey.ts        the server envelope (layer 2) and blind indexes

@@ -38,6 +38,7 @@ extension.add_file_references(sources)
 app_settings = app.build_configurations.first.build_settings
 extension.build_configurations.each do |config|
   settings = config.build_settings
+  settings["PRODUCT_NAME"] = "$(TARGET_NAME)"
   settings["PRODUCT_BUNDLE_IDENTIFIER"] = "net.kalmpass.app.autofill"
   settings["INFOPLIST_FILE"] = "AutoFill/Info.plist"
   settings["CODE_SIGN_ENTITLEMENTS"] = "AutoFill/AutoFill.entitlements"
