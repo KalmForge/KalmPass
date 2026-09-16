@@ -187,8 +187,8 @@ async function route(
     if (action === "/purge" && method === "DELETE") return items.purge(env, session, id);
   }
 
-  if (path === "/api/tools/breach" && method === "POST") {
-    return tools.breachCheck(env, request, session);
+  if (path === "/api/tools/exposed-passwords" && method === "POST") {
+    return tools.exposedPasswordCheck(env, request, session);
   }
 
   return json({ error: "not_found", message: "No such endpoint." }, { status: 404 });

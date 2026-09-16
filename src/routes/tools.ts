@@ -10,7 +10,7 @@ import { HttpError, badRequest, json, readJson, requireString } from "../http";
 import type { Session } from "../sessions";
 
 /**
- * POST /api/tools/breach. Have I Been Pwned range lookup.
+ * POST /api/tools/exposed-passwords. Have I Been Pwned range lookup.
  *
  * k-anonymity: the browser SHA-1s the password locally and sends only the first
  * five hex characters. HIBP returns every suffix under that prefix. Hundreds of
@@ -20,16 +20,16 @@ import type { Session } from "../sessions";
  * It is proxied rather than called directly so that HIBP sees the Worker rather
  * than your IP address, and so the page keeps a connect-src of 'self' only.
  */
-export async function breachCheck(
+export async function exposedPasswordCheck(
   env: Env,
   request: Request,
   session: Session,
 ): Promise<Response> {
-  if (!planOf(await loadUser(env, session.userId)).breachCheck) {
+  if (!planOf(await loadUser(env, session.userId)).exposedPasswordCheck) {
     throw new HttpError(
       403,
       "upgrade_required",
-      "Breach monitoring is part of Pro.",
+      "The exposed password check is part of Pro.",
       { plan: "pro" },
     );
   }
@@ -48,7 +48,7 @@ export async function breachCheck(
 
   if (!upstream.ok) {
     return json(
-      { error: "upstream", message: "The breach database could not be reached." },
+      { error: "upstream", message: "The exposed password list could not be reached." },
       { status: 502 },
     );
   }

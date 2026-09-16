@@ -1,10 +1,10 @@
 /**
  * Vault health: weak passwords, reused passwords, stale passwords, and, only
- * if you ask for it. Passwords that appear in known breach corpora.
+ * if you ask for it, passwords that other websites have exposed.
  *
- * All of it is computed here against already-decrypted items. The breach check
+ * All of it is computed here against already-decrypted items. The exposed password check
  * is the single feature in KalmPass that touches the network beyond your own
- * instance, and it uses k-anonymity: see `breachCheck` below.
+ * instance, and it uses k-anonymity: see `exposedPasswordCheck` below.
  */
 
 import { api } from "./api.js";
@@ -70,11 +70,11 @@ function scoreOf(total, weak, reused, stale) {
  *
  * `onProgress` is called as it goes, because a large vault takes a moment.
  */
-export async function breachCheck(items, onProgress) {
+export async function exposedPasswordCheck(items, onProgress) {
   const live = items.filter((item) => !item.deletedAt && item.password);
   const unique = [...new Set(live.map((item) => item.password))];
 
-  const breached = new Map();
+  const exposed = new Map();
   const cache = new Map();
   let done = 0;
 
@@ -84,7 +84,7 @@ export async function breachCheck(items, onProgress) {
     const suffix = hash.slice(5);
 
     if (!cache.has(prefix)) {
-      const { suffixes } = await api.breachRange(prefix);
+      const { suffixes } = await api.exposedRange(prefix);
       const counts = new Map();
       for (const line of suffixes.split("\n")) {
         const [candidate, count] = line.trim().split(":");
@@ -94,13 +94,13 @@ export async function breachCheck(items, onProgress) {
     }
 
     const count = cache.get(prefix).get(suffix);
-    if (count) breached.set(password, count);
+    if (count) exposed.set(password, count);
 
     onProgress?.(++done, unique.length);
   }
 
   return live
-    .filter((item) => breached.has(item.password))
-    .map((item) => ({ item, count: breached.get(item.password) }))
+    .filter((item) => exposed.has(item.password))
+    .map((item) => ({ item, count: exposed.get(item.password) }))
     .sort((a, b) => b.count - a.count);
 }

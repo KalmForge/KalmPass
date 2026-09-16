@@ -124,5 +124,5 @@ export const api = {
   emptyTrash: () => request("DELETE", "/items/trash"),
   bulkCreate: (items) => request("POST", "/items/bulk", { items }),
 
-  breachRange: (prefix) => request("POST", "/tools/breach", { prefix }),
+  exposedRange: (prefix) => request("POST", "/tools/exposed-passwords", { prefix }),
 };

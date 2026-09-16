@@ -56,7 +56,7 @@ and in [`public/security/index.html`](public/security/index.html).
 | **Vault** | Items with username, password, URL, notes, folders, favorites, password history |
 | **Authenticator** | TOTP codes generated on-device from seeds stored inside the encrypted blob |
 | **Generator** | Passwords and passphrases from `crypto.getRandomValues`, rejection-sampled to remove modulo bias, with honest entropy figures |
-| **Health** | Weak, reused and stale passwords; breach checking via HIBP k-anonymity (Pro) |
+| **Health** | Weak, reused and stale passwords; exposed password check via HIBP k-anonymity (Pro) |
 | **Recovery** | Recovery Key / Emergency Kit, plus an email-verified account reset for people who lose both |
 | **Accounts** | Signup, email confirmation, optional TOTP two-factor with backup codes, device list, activity log |
 | **Billing** | Stripe Checkout and customer portal, subscription webhooks, server-enforced plan quotas |

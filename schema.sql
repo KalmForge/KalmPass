@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS users (
   id                     TEXT    PRIMARY KEY,
 
   -- The address itself is not recoverable from the index, so the database
-  -- cannot be mined for a customer list or cross-referenced against a breach
-  -- corpus. `email_enc` is the only copy, and it needs SERVER_KEY to read.
+  -- cannot be mined for a customer list or matched against any other
+  -- data set. `email_enc` is the only copy, and it needs SERVER_KEY to read.
   email_index            TEXT    NOT NULL UNIQUE,
   email_enc              TEXT    NOT NULL,
 

@@ -3,7 +3,7 @@
 import { api } from "./api.js";
 import { el, relativeTime } from "./dom.js";
 import { crackTime, estimateStrength, generatePassphrase } from "./generator.js";
-import { analyse, breachCheck } from "./health.js";
+import { analyse, exposedPasswordCheck } from "./health.js";
 import { APP_HOME, isNative, platform, saveFile } from "./platform.js";
 import * as store from "./store.js";
 import { vault } from "./store.js";
@@ -220,7 +220,7 @@ const PANELS = {
     section("How recovery works", [
       el("ul", { class: "bullets" }, [
         el("li", { text: "Your vault key is wrapped twice: once by your master password, once by your Recovery Key." }),
-        el("li", { text: "Either one opens the vault. We hold neither, so we cannot open it and neither can anyone who breaches us." }),
+        el("li", { text: "Either one opens the vault. We hold neither, so we cannot open it and nobody else can either." }),
         el("li", { text: "Using the Recovery Key issues a fresh one, because the old one has been typed into a browser." }),
         el("li", { text: "Lose both and the data is unrecoverable by anyone. That is the trade for nobody else being able to read it." }),
       ]),
@@ -904,7 +904,7 @@ function planPanel(refresh) {
                 : vault.planPeriodEnd
                   ? `Renews ${new Date(vault.planPeriodEnd).toLocaleDateString()}.`
                   : "Active."
-              : `${vault.itemCount} items, and as many as you like. Three devices, no breach monitoring.`,
+              : `${vault.itemCount} items, and as many as you like. Three devices, no exposed password check.`,
           ]),
         ]),
       ]),
@@ -935,7 +935,7 @@ function planPanel(refresh) {
         [
           el("ul", { class: "bullets" }, [
             el("li", { text: "Unlimited devices" }),
-            el("li", { text: "Breach monitoring against Have I Been Pwned" }),
+            el("li", { text: "Exposed password check against Have I Been Pwned" }),
             el("li", { text: "Priority support" }),
           ]),
           el("button", {
@@ -948,7 +948,7 @@ function planPanel(refresh) {
             }),
           }),
         ],
-        "Encryption is identical on both plans, and Free keeps unlimited passwords. Pro buys more devices and breach monitoring, not safety.",
+        "Encryption is identical on both plans, and Free keeps unlimited passwords. Pro buys more devices and the exposed password check, not safety.",
       ),
     );
   }
@@ -1010,7 +1010,7 @@ function healthPanel() {
       el("div", { class: "finding" }, [
         el("h3", {}, ["Reused passwords", el("span", { class: "pill", text: String(report.reused.length) })]),
         el("p", { class: "faint m0" }, [
-          "One breach at any of these sites exposes the others.",
+          "If any one of these sites loses it, the others are exposed too.",
         ]),
         el(
           "ul",
@@ -1039,7 +1039,7 @@ function healthPanel() {
   const button = el("button", {
     class: "ghost",
     type: "button",
-    text: vault.plan === "pro" ? "Check for breaches" : "Check for breaches (Pro)",
+    text: vault.plan === "pro" ? "Check for exposed passwords" : "Check for exposed passwords (Pro)",
   });
 
   button.addEventListener(
@@ -1047,14 +1047,14 @@ function healthPanel() {
     guard(async () => {
       const done = busy(button, "Checking…");
       try {
-        const found = await breachCheck(vault.items, (n, total) => {
+        const found = await exposedPasswordCheck(vault.items, (n, total) => {
           button.textContent = `Checking ${n}/${total}…`;
         });
         results.replaceChildren(
           found.length === 0
             ? el("p", {
                 class: "faint m0",
-                text: "None of your passwords appear in a known breach." })
+                text: "None of your passwords appear in any list of exposed passwords." })
             : el(
                 "ul",
                 {},
@@ -1067,7 +1067,7 @@ function healthPanel() {
         results.replaceChildren(
           el("p", { class: "faint m0" }, [
             error.code === "upgrade_required"
-              ? "Breach monitoring is part of Pro. "
+              ? "The exposed password check is part of Pro. "
               : `${error.message} `,
             error.code === "upgrade_required"
               ? el("button", {
@@ -1087,7 +1087,7 @@ function healthPanel() {
 
   container.append(
     section(
-      "Breach check",
+      "Exposed password check",
       [button, results],
       "Sends the first five characters of each password's SHA-1 hash to Have I Been Pwned, proxied through KalmPass. The password itself never leaves this device.",
     ),

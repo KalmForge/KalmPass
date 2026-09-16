@@ -6,7 +6,7 @@ export interface Plan {
   /** null means unlimited. */
   items: number | null;
   devices: number | null;
-  breachCheck: boolean;
+  exposedPasswordCheck: boolean;
 }
 
 /**
@@ -22,8 +22,8 @@ export interface Plan {
 export const PLANS: Record<string, Plan> = {
   // Three, not two: a browser and its extension on one machine already take
   // two slots, so a two device plan would be spent before the phone arrives.
-  free: { id: "free", name: "Free", items: null, devices: 3, breachCheck: false },
-  pro: { id: "pro", name: "Pro", items: null, devices: null, breachCheck: true },
+  free: { id: "free", name: "Free", items: null, devices: 3, exposedPasswordCheck: false },
+  pro: { id: "pro", name: "Pro", items: null, devices: null, exposedPasswordCheck: true },
 };
 
 /**

@@ -96,7 +96,7 @@
       <p>
         Account addresses are stored as a keyed HMAC blind index for lookup, plus an encrypted copy.
         The database holds no readable identifier, so it cannot be mined for a customer list or
-        cross-referenced against a breach corpus.
+        matched against any other list.
       </p>
 
       <h2>Signing in</h2>
@@ -262,7 +262,7 @@
       <h2>Outbound requests</h2>
       <p>
         In normal use KalmPass makes no request to anywhere but its own origin. The single exception
-        is the breach check, which you have to press a button to run: your browser SHA-1s a password
+        is the exposed password check, which you have to press a button to run: your browser SHA-1s a password
         locally and sends only the <em>first five hex characters</em> to Have I Been Pwned, which
         returns every hash sharing that prefix. The match is found on your device. We proxy the
         request so HIBP does not see your IP either.
