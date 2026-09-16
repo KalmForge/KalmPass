@@ -112,7 +112,7 @@ const recoveryKey = () =>
 
 // --- http -------------------------------------------------------------------
 
-async function call(path, { method = "GET", body, token } = {}) {
+async function call(path, { method = "GET", body, token, origin = BASE } = {}) {
   const response = await fetch(`${BASE}/api${path}`, {
     method,
     headers: {
@@ -121,7 +121,7 @@ async function call(path, { method = "GET", body, token } = {}) {
       // The server refuses a cookie-authenticated write from another origin.
       // A bearer request carries no cookie, so it is exempt, which is exactly
       // what this run is here to prove.
-      ...(token ? {} : { origin: BASE }),
+      ...(token || !origin ? {} : { origin }),
     },
     body: body ? JSON.stringify(body) : undefined,
     redirect: "error",
@@ -166,15 +166,32 @@ if (signup.status !== 201) {
   process.exit(1);
 }
 
-// The extension's path: a token in the body, and no cookie at all.
+// The extension's path: a token in the body, and no cookie at all. Sent from
+// an extension origin, as a real browser would send it.
 const login = await call("/account/login", {
   method: "POST",
+  origin: "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
   // Same device as the signup, so the device checks further down start from a
   // single session rather than an extra anonymous one.
   body: { email, authKey: account.authKey, tokenAuth: true, deviceId: "smokedeviceAAAA" },
 });
 const token = login.payload?.token;
-check("login returns a bearer token", Boolean(token));
+check("login returns a bearer token", Boolean(token), `status ${login.status}`);
+
+const firefoxPrelogin = await call("/account/prelogin", {
+  method: "POST",
+  origin: "moz-extension://2f1b7c1e-8a4d-4c5e-9f00-0123456789ab",
+  body: { email },
+});
+check("a Firefox extension origin is accepted", firefoxPrelogin.status === 200,
+  `status ${firefoxPrelogin.status}`);
+
+const foreign = await call("/account/prelogin", {
+  method: "POST",
+  origin: "https://kalmpass.net.evil.example",
+  body: { email },
+});
+check("a foreign web origin is refused", foreign.status === 403, `status ${foreign.status}`);
 check("login does not also set a cookie", !login.payload?.cookie);
 
 const unwrapped = await crypto.subtle.importKey(

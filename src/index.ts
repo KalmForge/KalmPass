@@ -31,6 +31,8 @@ import { type Session, purgeExpired, resolveSession } from "./sessions";
  * webhook carries a signature instead, which `billing.webhook` verifies before
  * it parses anything.
  */
+const EXTENSION_ORIGIN = new RegExp("^(chrome-extension|moz-extension|safari-web-extension)://[A-Za-z0-9._-]+$");
+
 function assertSameOrigin(request: Request, url: URL): void {
   if (request.method === "GET" || request.method === "HEAD") return;
   if (url.pathname === "/api/billing/webhook") return;
@@ -38,7 +40,12 @@ function assertSameOrigin(request: Request, url: URL): void {
   // the browser, so a cross-site page cannot cause one to be used. CSRF is a
   // cookie problem, and this request is not using the cookie.
   if (request.headers.get("authorization")) return;
-  if (request.headers.get("origin") !== url.origin) {
+  const origin = request.headers.get("origin") ?? "";
+  // The browser extensions sign in from their own origin. A web page cannot
+  // claim one of these schemes, and the extensions send no cookie, so there is
+  // nothing for a forged request to ride on.
+  if (EXTENSION_ORIGIN.test(origin)) return;
+  if (origin !== url.origin) {
     throw new HttpError(403, "bad_origin", "Cross-origin requests are not accepted.");
   }
 }
