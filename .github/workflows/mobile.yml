@@ -87,6 +87,8 @@ jobs:
           gem list -i xcodeproj >/dev/null || sudo gem install xcodeproj
           ruby scripts/add-autofill-target.rb
 
+      # Compiler errors are repeated as annotations, which show on the run
+      # page without downloading the log.
       - name: Build for the simulator
         run: |
           xcodebuild \
@@ -97,4 +99,9 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
-            build
+            build > xcodebuild.log 2>&1 || {
+              grep -E "error:|fatal error|The following build commands failed" -A2 xcodebuild.log \
+                | sort -u | head -40 | sed "s/^/::error::/"
+              tail -80 xcodebuild.log
+              exit 1
+            }

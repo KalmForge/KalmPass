@@ -13,6 +13,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      HAS_CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +48,10 @@ jobs:
           path: dist/kalmpass-*.zip
           if-no-files-found: error
 
+      # Skipped, not failed, until the repository has a Cloudflare API token.
+      # Until then deploys are run by hand with `npm run deploy`.
       - name: Deploy to Cloudflare
+        if: ${{ env.HAS_CLOUDFLARE_TOKEN == 'true' }}
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
