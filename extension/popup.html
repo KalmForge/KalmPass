@@ -46,10 +46,22 @@
 
     <!-- Unlocked -->
     <div id="vault" hidden>
+      <section id="offer" class="offer" hidden>
+        <p id="offer-text" class="offer-text"></p>
+        <div class="actions">
+          <button id="offer-accept" class="go" type="button">Save</button>
+          <button id="offer-later" type="button">Not now</button>
+          <button id="offer-never" type="button">Never for this site</button>
+        </div>
+      </section>
       <div class="search">
         <input id="search" type="search" placeholder="Search vault" spellcheck="false" autocomplete="off" />
       </div>
       <ul id="list" class="list"></ul>
+      <label class="toggle">
+        <input id="capture" type="checkbox" />
+        <span>Offer to save logins I type into websites</span>
+      </label>
       <footer class="foot">
         <span id="account" class="dim tiny"></span>
         <a id="open-web" href="https://kalmpass.net/app/" target="_blank" rel="noopener">Open vault</a>

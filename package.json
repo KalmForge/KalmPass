@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "A personal, zero-knowledge password manager on Cloudflare Workers + D1.",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
@@ -17,7 +17,10 @@
     "stripe:secrets": "node scripts/set-stripe-secrets.mjs",
     "icons": "node scripts/make-icons.mjs",
     "lint:libs": "node scripts/check-shared-libs.mjs",
-    "smoke": "node scripts/smoke-test.mjs"
+    "smoke": "node scripts/smoke-test.mjs",
+    "ext:build": "node scripts/build-extension.mjs",
+    "ext:lint": "npm run ext:build && npx --yes web-ext@8 lint --source-dir dist/extension/firefox --self-hosted=false",
+    "ext:test": "node scripts/extension-test.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

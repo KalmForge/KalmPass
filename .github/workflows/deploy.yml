@@ -35,6 +35,17 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # The extension ships separately, but a build that Mozilla would reject
+      # should be caught here rather than at upload.
+      - name: Build and lint the extensions
+        run: npm run ext:lint
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extensions
+          path: dist/kalmpass-*.zip
+          if-no-files-found: error
+
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:

@@ -64,27 +64,57 @@ and in [`public/security/index.html`](public/security/index.html).
 
 ## The browser extension
 
-`extension/` is a Manifest V3 Chrome extension. It is not on the Web Store, so
-it is side loaded:
+`extension/` is one Manifest V3 extension that builds for Chrome (and Edge,
+Brave, Opera), Firefox and Safari. Only the manifest differs between them.
 
-1. Open `chrome://extensions`
-2. Turn on **Developer mode**, top right
-3. **Load unpacked**, and choose the `extension` folder
+```
+npm run ext:build   # dist/extension/{chrome,firefox,safari} and store zips
+npm run ext:lint    # Mozilla's linter over the Firefox build
+npm run ext:test    # the real background worker against the live server
+```
 
-It asks for four permissions and no more: `storage`, `activeTab`,
-`scripting` and `alarms`, plus host access to `kalmpass.net` alone. There is
-deliberately no content script and no `<all_urls>`, so the extension runs no
-code on any page until you press Fill, and it can never read a page you have
-not pointed it at. Most password manager extensions ask for far more.
+To try it before the store listings exist:
 
-Keys live only in the service worker, held in `chrome.storage.session`, which
-is memory backed and cleared when Chrome quits. The popup never receives a
+- **Chrome, Edge, Brave:** open `chrome://extensions`, turn on Developer mode,
+  **Load unpacked**, and choose `extension/` (or `dist/extension/chrome`).
+- **Firefox 140 or later:** open `about:debugging#/runtime/this-firefox`,
+  **Load Temporary Add-on**, and pick `dist/extension/firefox/manifest.json`.
+  It lasts until Firefox restarts. For a permanent install, upload
+  `dist/kalmpass-firefox-<version>.zip` to addons.mozilla.org, either listed or
+  as an unlisted self-distributed add-on, which Mozilla signs automatically.
+- **Safari:** needs a Mac with Xcode. Run
+  `xcrun safari-web-extension-converter dist/extension/safari --app-name KalmPass --bundle-identifier net.kalmpass.safari --no-open`,
+  open the generated project, set your team under Signing, and run it. Then
+  enable KalmPass in Safari's Settings, Extensions. Shipping it to other people
+  goes through the App Store and an Apple Developer account.
+
+Out of the box it asks for `storage`, `activeTab`, `scripting` and `alarms`,
+plus host access to `kalmpass.net` alone. There is no `<all_urls>`, so the
+extension runs no code on any page until you press Fill.
+
+**Save offers are opt in.** Ticking "Offer to save logins" in the popup asks
+the browser for access to `https://*/*` (an optional permission) and only then
+registers `capture.js`. That script watches for a login being sent and passes
+the username and password to the background worker. It never runs on
+kalmpass.net, never on plain http, and never inside frames. The worker keeps
+the unsaved login in session memory for ten minutes at most and shows a `+` on
+the toolbar icon; the offer itself appears in the popup, where a page cannot
+draw a fake one. Messages from a page can reach exactly one handler, the one
+that suggests a login, so a hostile page cannot ask for secrets.
+
+**Filling warns first** when the page is not the site the login was saved for,
+or is not encrypted, and fills only after a second click.
+
+Keys live only in the background worker, held in `chrome.storage.session`,
+which is memory backed and cleared when the browser quits. The popup never receives a
 secret unless you ask to copy that particular one, and filling happens in the
 worker so a password reaches the page without passing through the popup at all.
 
 The extension authenticates with a bearer token rather than the session cookie,
-because a `SameSite=Strict` cookie will not travel from a `chrome-extension://`
-origin. `npm run smoke` exercises that path end to end.
+because a `SameSite=Strict` cookie will not travel from an extension origin.
+The server accepts `chrome-extension://`, `moz-extension://` and
+`safari-web-extension://` origins for that reason; a web page cannot claim
+any of them. `npm run smoke` and `npm run ext:test` both sign in that way.
 
 `extension/lib/` holds copies of the crypto modules, since an extension cannot
 import from the website. `npm run lint:libs` fails the build if they drift.

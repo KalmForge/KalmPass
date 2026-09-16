@@ -62,10 +62,72 @@ async function start() {
   }
 
   $("account").textContent = `${state.email} · locks after ${state.lockMinutes} min idle`;
+  $("capture").checked = state.capture;
   show("vault");
-  await refresh();
+  await Promise.all([refresh(), showOffer()]);
   $("search").focus();
 }
+
+// --- save on submit ---------------------------------------------------------
+
+let offerId = null;
+
+async function showOffer() {
+  const { offer } = await send("offer");
+  offerId = offer?.id ?? null;
+  $("offer").hidden = !offer;
+  if (!offer) return;
+
+  const who = offer.username ? `${offer.username} on ${offer.host}` : offer.host;
+  $("offer-text").textContent =
+    offer.kind === "update"
+      ? `Update the saved password for ${who}?`
+      : `Save the login you just used for ${who}?`;
+  $("offer-accept").textContent = offer.kind === "update" ? "Update" : "Save";
+}
+
+async function answerOffer(action, extra = {}) {
+  if (!offerId) return;
+  try {
+    const result = await send(action, { id: offerId, ...extra });
+    if (action === "acceptOffer") {
+      toast(result.kind === "update" ? "Password updated" : "Login saved");
+      await refresh();
+    }
+  } catch (error) {
+    toast(error.message);
+  }
+  await showOffer();
+}
+
+$("offer-accept").addEventListener("click", () => answerOffer("acceptOffer"));
+$("offer-later").addEventListener("click", () => answerOffer("dismissOffer"));
+$("offer-never").addEventListener("click", () => answerOffer("dismissOffer", { never: true }));
+
+/**
+ * Turning this on needs access to every https site, so the browser is asked
+ * for it here, as the direct result of the click. Firefox refuses a request
+ * that is not, which is why nothing is awaited before it.
+ */
+$("capture").addEventListener("change", async (event) => {
+  const box = event.target;
+  let on = box.checked;
+  if (on) {
+    try {
+      on = await chrome.permissions.request({ origins: ["https://*/*"] });
+    } catch {
+      on = false;
+    }
+  }
+  try {
+    const result = await send("setCapture", { on });
+    box.checked = result.capture;
+    toast(result.capture ? "KalmPass will offer to save new logins" : "Save offers are off");
+  } catch (error) {
+    box.checked = false;
+    toast(error.message);
+  }
+});
 
 // --- unlocking --------------------------------------------------------------
 
@@ -201,16 +263,7 @@ function row(item) {
   actions.className = "actions";
 
   actions.append(
-    button("Fill", "go", async () => {
-      try {
-        await send("fill", { id: item.id });
-        // Closing afterwards puts the focus back on the page, which is where
-        // somebody who just filled a login wants to be.
-        window.close();
-      } catch (error) {
-        toast(error.message);
-      }
-    }),
+    button("Fill", "go", () => fillItem(item, actions)),
     button("Copy password", null, () => copy(item.id, "password", "Password copied")),
     button("Copy user", null, () => copy(item.id, "username", "Username copied")),
   );
@@ -221,6 +274,38 @@ function row(item) {
 
   li.append(head, actions);
   return li;
+}
+
+async function fillItem(item, actions, anyway = false) {
+  try {
+    await send("fill", { id: item.id, anyway });
+    // Closing afterwards puts the focus back on the page, which is where
+    // somebody who just filled a login wants to be.
+    window.close();
+  } catch (error) {
+    if (error.code === "host_mismatch" || error.code === "insecure_page") {
+      askFirst(item, actions, error.message);
+    } else {
+      toast(error.message);
+    }
+  }
+}
+
+/**
+ * Asked inline rather than with confirm(), which Firefox does not allow in a
+ * popup and Chrome answers by closing it.
+ */
+function askFirst(item, actions, message) {
+  const original = [...actions.childNodes];
+  const note = document.createElement("p");
+  note.className = "warn";
+  note.setAttribute("role", "alert");
+  note.textContent = message;
+  actions.replaceChildren(
+    note,
+    button("Fill anyway", "danger", () => fillItem(item, actions, true)),
+    button("Cancel", null, () => actions.replaceChildren(...original)),
+  );
 }
 
 /**
