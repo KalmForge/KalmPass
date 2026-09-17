@@ -2,6 +2,8 @@ declare global {
   interface Env {
     DB: D1Database;
     ASSETS: Fetcher;
+    /** Nightly database backups. See src/backup.ts. */
+    BACKUPS?: R2Bucket;
 
     /** Cloudflare Email Sending. Absent until the domain is onboarded. */
     EMAIL?: { send(message: EmailMessagePayload): Promise<unknown> };

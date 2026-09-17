@@ -1,0 +1,37 @@
+name: Uptime
+
+# Checks the live service every 15 minutes. A failed run is the alert: GitHub
+# emails a failed scheduled run to the account that last changed this file.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: The website answers
+        run: |
+          curl --fail --silent --show-error --max-time 20 --retry 2 --retry-delay 10 \
+            https://kalmpass.net/ | grep -q "KalmPass"
+
+      - name: The API, database and server key are healthy
+        run: |
+          body=$(curl --silent --show-error --max-time 20 --retry 2 --retry-delay 10 \
+            https://kalmpass.net/api/health)
+          echo "$body"
+          echo "$body" | jq -e '.ok == true' > /dev/null || {
+            echo "::error::KalmPass health check failed: $body"
+            exit 1
+          }
+
+      # Backups run nightly. Two missed nights is worth hearing about.
+      - name: Last night's backup ran
+        run: |
+          age=$(curl --silent --max-time 20 https://kalmpass.net/api/health | jq -r '.backupAgeHours')
+          if [ "$age" = "null" ] || [ "$age" -gt 50 ]; then
+            echo "::error::The last database backup is ${age} hours old."
+            exit 1
+          fi

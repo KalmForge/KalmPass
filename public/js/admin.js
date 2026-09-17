@@ -63,6 +63,43 @@ function showMessage(title, detail, href) {
   );
 }
 
+// --- backups ----------------------------------------------------------------
+
+const DAY = 24 * 60 * 60 * 1000;
+
+function backupTile(data) {
+  const b = data.backup;
+  if (!b) return ["Last backup", "none", "no backup has run yet", "attention"];
+  const rows = Object.values(b.tables).reduce((sum, n) => sum + n, 0);
+  const stale = Date.now() - b.createdAt > 2 * DAY;
+  const mismatch = b.keyFingerprint !== data.keyFingerprint;
+  return [
+    "Last backup",
+    relativeTime(b.createdAt),
+    mismatch
+      ? "made under a different server key"
+      : `${rows} rows, ${Math.max(1, Math.round(b.bytes / 1024))} KB`,
+    stale || mismatch ? "attention" : null,
+  ];
+}
+
+async function backupNow(button) {
+  button.disabled = true;
+  button.textContent = "Backing up...";
+  const response = await fetch("/api/admin/backup", {
+    method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
+  }).catch(() => null);
+  if (response?.ok) {
+    await boot();
+    return;
+  }
+  const reply = await response?.json().catch(() => null);
+  button.textContent = reply?.message ?? "Backup failed";
+  button.disabled = false;
+}
+
 // --- render -----------------------------------------------------------------
 
 function render(data) {
@@ -78,6 +115,12 @@ function render(data) {
     el("div", { class: "admin-head" }, [
       el("h1", { text: "Overview" }),
       el("span", { class: "faint", text: `Generated ${relativeTime(data.generatedAt)}` }),
+      el("button", {
+        class: "btn btn-line",
+        type: "button",
+        text: "Back up now",
+        onClick: (event) => backupNow(event.currentTarget),
+      }),
     ]),
 
     tiles([
@@ -91,7 +134,7 @@ function render(data) {
         data.stripe === "live" ? "taking real payments" : "not taking real money",
         data.stripe === "live" ? null : "attention",
       ],
-      ["Monthly revenue", money.format(t.mrr), `${money.format(data.arr)} a year`],
+      ["Monthly revenue", money.format(t.mrr), `${money.format(t.arr)} a year`],
       ["New", t.newInWindow, `in ${data.windowDays} days`],
       ["Active", t.activeInWindow, `in ${data.windowDays} days`],
       [
@@ -106,6 +149,8 @@ function render(data) {
         t.pastDue > 0 ? "needs chasing" : "none",
         t.pastDue > 0 ? "attention" : null,
       ],
+      backupTile(data),
+      ["Server key", data.keyFingerprint, "fingerprint, check your backups match"],
       [
         "Locked out",
         t.lockedOut,

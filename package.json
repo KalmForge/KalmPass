@@ -21,7 +21,10 @@
     "ext:build": "node scripts/build-extension.mjs",
     "ext:lint": "npm run ext:build && npx --yes web-ext@8 lint --source-dir dist/extension/firefox --self-hosted=false",
     "ext:test": "node scripts/extension-test.mjs",
-    "vectors": "node scripts/make-vectors.mjs"
+    "vectors": "node scripts/make-vectors.mjs",
+    "key:check": "node scripts/server-key.mjs check",
+    "key:sheet": "node scripts/server-key.mjs sheet",
+    "backup:restore": "node scripts/restore-backup.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

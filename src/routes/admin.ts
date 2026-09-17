@@ -14,8 +14,9 @@
 import { loadUser } from "../accounts";
 import { describePrice } from "./billing";
 import { fromB64, timingSafeEqual } from "../crypto";
-import { json, notFound } from "../http";
-import { emailIndex, open } from "../serverkey";
+import { latestBackup, runBackup } from "../backup";
+import { HttpError, json, notFound } from "../http";
+import { emailIndex, keyFingerprint, open } from "../serverkey";
 import type { Session } from "../sessions";
 
 const DAY = 86_400_000;
@@ -60,6 +61,14 @@ const allRows = <T>(result: D1Result<unknown> | undefined): T[] =>
   (result?.results ?? []) as T[];
 
 /** GET /api/admin/overview */
+/** POST /api/admin/backup. Runs the nightly backup now. */
+export async function backupNow(env: Env, session: Session): Promise<Response> {
+  await assertAdmin(env, session);
+  const manifest = await runBackup(env);
+  if (!manifest) throw new HttpError(503, "no_bucket", "The backup bucket is not bound to this Worker.");
+  return json({ ok: true, backup: manifest });
+}
+
 export async function overview(env: Env, session: Session): Promise<Response> {
   await assertAdmin(env, session);
 
@@ -164,7 +173,11 @@ export async function overview(env: Env, session: Session): Promise<Response> {
     return { day, count: byDay.get(day) ?? 0 };
   });
 
+  const backup = await latestBackup(env).catch(() => null);
+
   return json({
+    backup,
+    keyFingerprint: await keyFingerprint(env),
     stripePrice: await describePrice(env),
     generatedAt: now,
     windowDays: WINDOW_DAYS,

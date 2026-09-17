@@ -21,6 +21,8 @@ import * as billing from "./routes/billing";
 import * as items from "./routes/items";
 import * as passkeys from "./routes/passkeys";
 import * as tools from "./routes/tools";
+import { latestBackup, runBackup } from "./backup";
+import { emailIndex } from "./serverkey";
 import { type Session, purgeExpired, resolveSession } from "./sessions";
 
 /**
@@ -75,6 +77,37 @@ function assertSameOrigin(request: Request, url: URL): void {
   }
 }
 
+/**
+ * GET /api/health, for the uptime check in .github/workflows/uptime.yml.
+ *
+ * Proves the database answers and the server key is usable, and says how old
+ * the last backup is. Nothing here identifies an account or reveals the key.
+ */
+async function health(env: Env): Promise<Response> {
+  const checks = { database: false, serverKey: false, email: Boolean(env.EMAIL) };
+  try {
+    checks.database = (await env.DB.prepare("SELECT 1 AS ok").first<{ ok: number }>())?.ok === 1;
+  } catch {
+    /* reported as false */
+  }
+  try {
+    await emailIndex(env, "health@kalmpass.net");
+    checks.serverKey = true;
+  } catch {
+    /* reported as false */
+  }
+  const backup = await latestBackup(env).catch(() => null);
+  const ok = checks.database && checks.serverKey;
+  return json(
+    {
+      ok,
+      checks,
+      backupAgeHours: backup ? Math.floor((Date.now() - backup.createdAt) / 3_600_000) : null,
+    },
+    { status: ok ? 200 : 503 },
+  );
+}
+
 async function requireSession(env: Env, request: Request): Promise<Session> {
   const session = await resolveSession(env, request);
   if (!session) throw unauthorized("Your session has expired. Sign in again.");
@@ -92,6 +125,7 @@ async function route(
 
   // --- Public: getting in, and getting back in -----------------------------
   if (path === "/api/account/status" && method === "GET") return account.status(env);
+  if (path === "/api/health" && method === "GET") return health(env);
   if (path === "/api/account/prelogin" && method === "POST") return account.prelogin(env, request);
   if (path === "/api/account/signup" && method === "POST") return account.signup(env, request, ctx);
   if (path === "/api/account/login" && method === "POST") return account.login(env, request, ctx);
@@ -161,6 +195,7 @@ async function route(
   if (path === "/api/account/activity" && method === "GET") return account.activity(env, session);
 
   if (path === "/api/admin/overview" && method === "GET") return admin.overview(env, session);
+  if (path === "/api/admin/backup" && method === "POST") return admin.backupNow(env, session);
 
   if (path === "/api/billing/checkout" && method === "POST") {
     return billing.checkout(env, request, session);
@@ -227,7 +262,7 @@ export default {
   /** Nightly housekeeping, so a quiet instance still tidies itself. */
   async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(
-      Promise.all([purgeExpired(env), pruneAudit(env)]).then(() => undefined),
+      Promise.all([purgeExpired(env), pruneAudit(env), runBackup(env)]).then(() => undefined),
     );
   },
 } satisfies ExportedHandler<Env>;

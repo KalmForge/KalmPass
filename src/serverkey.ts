@@ -152,6 +152,31 @@ async function mac(key: CryptoKey, data: Uint8Array | string): Promise<string> {
   return toB64(new Uint8Array(await crypto.subtle.sign("HMAC", key, bytes as BufferSource)));
 }
 
+/**
+ * A short, public identifier for the SERVER_KEY in use.
+ *
+ * It is a separate HKDF branch, so it reveals nothing about the envelope or
+ * pepper keys. `npm run key:check` computes the same value from a backup copy
+ * of the key, which is how you prove that copy is the right one.
+ */
+export async function keyFingerprint(env: Env): Promise<string> {
+  const raw = fromB64(env.SERVER_KEY);
+  const ikm = await crypto.subtle.importKey("raw", raw as BufferSource, "HKDF", false, ["deriveBits"]);
+  const bits = new Uint8Array(
+    await crypto.subtle.deriveBits(
+      {
+        name: "HKDF",
+        hash: "SHA-256",
+        salt: new Uint8Array(0) as BufferSource,
+        info: enc.encode("kalmpass/v1/fingerprint") as BufferSource,
+      },
+      ikm,
+      64,
+    ),
+  );
+  return [...bits].map((b) => b.toString(16).padStart(2, "0")).join("").match(/.{4}/g)!.join("-");
+}
+
 /** Deterministic, irreversible lookup token for an email address. */
 export async function emailIndex(env: Env, email: string): Promise<string> {
   const { emailIndex: key } = await keys(env);

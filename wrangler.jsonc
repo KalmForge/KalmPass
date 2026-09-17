@@ -27,6 +27,9 @@
     }
   ],
 
+  // Nightly backups. The bucket deletes anything older than 35 days.
+  "r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "kalmpass-backups" }],
+
   "send_email": [{ "name": "EMAIL" }],
 
   "vars": {
@@ -39,7 +42,7 @@
     "PRO_INTERVAL": "year"
   },
 
-  // Nightly housekeeping: expired sessions, spent tokens, stale trash, old audit.
+  // Nightly housekeeping and a backup of the database to R2.
   "triggers": { "crons": ["17 4 * * *"] },
 
   "observability": { "enabled": true }
