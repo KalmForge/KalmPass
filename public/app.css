@@ -1,6 +1,8 @@
 /* KalmPass, one stylesheet, no framework, no external fonts. */
 
 :root {
+  /* Light only, whatever the device is set to. */
+  color-scheme: light;
   --bg: #f6f7f9;
   --bg-raised: #ffffff;
   --bg-sunken: #eef0f3;
@@ -20,27 +22,6 @@
   --shadow: 0 14px 36px rgb(20 24 31 / 0.11);
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-}
-
-/* Light is the default. Dark follows the reader, it is not the house style. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1219;
-    --bg-raised: #141b25;
-    --bg-sunken: #090d13;
-    --line: #242e3b;
-    --line-soft: #1b2430;
-    --text: #e8ecf2;
-    --text-dim: #9aa6b6;
-    --text-faint: #6f7d8f;
-    --accent: #5aa6f0;
-    --accent-soft: #1a2f4b;
-    --teal: #2fc7ae;
-    --good: #2fc7ae;
-    --warn: #e0a441;
-    --bad: #f07a72;
-    --shadow: 0 16px 42px rgb(2 6 12 / 0.55);
-  }
 }
 
 * {
